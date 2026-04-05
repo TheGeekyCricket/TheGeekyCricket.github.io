@@ -1,0 +1,249 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const locations = await getCollection('locations');
+const characters = await getCollection('characters');
+const npcs = await getCollection('npcs');
+const events = await getCollection('events');
+const music = await getCollection('music');
+
+const recentEvents = events
+  .sort((a, b) => b.data.sortOrder - a.data.sortOrder)
+  .slice(0, 3);
+---
+
+<BaseLayout title="Home">
+  <div class="hero">
+    <div class="hero__overlay"></div>
+    <div class="hero__content container">
+      <h1 class="hero__title">The Geekery Lore Explorer</h1>
+      <p class="hero__subtitle">
+        Discover The Geekery's world, its heroes, and its legends.
+      </p>
+      <div class="hero__actions">
+        <a href="/map/" class="btn btn--primary btn--lg">🗺️ Explore the Map</a>
+        <a href="/characters/" class="btn btn--lg">⚔️ Meet the Heroes</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-content home-content">
+    <div class="container">
+      <!-- Stats -->
+      <div class="stats-bar">
+        <div class="stat">
+          <span class="stat__number">{locations.length}</span>
+          <span class="stat__label">Locations</span>
+        </div>
+        <div class="stat">
+          <span class="stat__number">{characters.length}</span>
+          <span class="stat__label">Characters</span>
+        </div>
+        <div class="stat">
+          <span class="stat__number">{npcs.length}</span>
+          <span class="stat__label">NPCs</span>
+        </div>
+        <div class="stat">
+          <span class="stat__number">{events.length}</span>
+          <span class="stat__label">Events</span>
+        </div>
+        <div class="stat">
+          <span class="stat__number">{music.length}</span>
+          <span class="stat__label">Tracks</span>
+        </div>
+      </div>
+
+      <!-- Quick Nav Cards -->
+      <div class="grid grid--3 home-nav">
+        <a href="/map/" class="card home-nav__card">
+          <div class="home-nav__icon">🗺️</div>
+          <h3 class="card-title">World Map</h3>
+          <p class="card-meta">Explore the interactive map and click on locations to discover their lore.</p>
+        </a>
+        <a href="/characters/" class="card home-nav__card">
+          <div class="home-nav__icon">⚔️</div>
+          <h3 class="card-title">Characters</h3>
+          <p class="card-meta">Meet the adventurers who shape the fate of the world.</p>
+        </a>
+        <a href="/npcs/" class="card home-nav__card">
+          <div class="home-nav__icon">👤</div>
+          <h3 class="card-title">NPCs</h3>
+          <p class="card-meta">Allies, villains, and everyone in between.</p>
+        </a>
+        <a href="/world-lore/" class="card home-nav__card">
+          <div class="home-nav__icon">📜</div>
+          <h3 class="card-title">World Lore</h3>
+          <p class="card-meta">History, factions, magic, religions, and more.</p>
+        </a>
+        <a href="/timeline/" class="card home-nav__card">
+          <div class="home-nav__icon">📅</div>
+          <h3 class="card-title">Timeline</h3>
+          <p class="card-meta">A chronological journey through the world's events.</p>
+        </a>
+        <a href="/music/" class="card home-nav__card">
+          <div class="home-nav__icon">🎵</div>
+          <h3 class="card-title">Music</h3>
+          <p class="card-meta">Listen to and download original music from our world.</p>
+        </a>
+      </div>
+
+      <!-- Recent Events -->
+      {recentEvents.length > 0 && (
+        <section class="home-section">
+          <h2 class="section-title">Latest Events</h2>
+          <div class="grid grid--3">
+            {recentEvents.map((evt) => (
+              <a href={`/events/${evt.id}/`} class="card">
+                <span class="event-date">{evt.data.date}</span>
+                <h3 class="card-title">{evt.data.title}</h3>
+                <p class="card-meta">{evt.data.description}</p>
+                <span class={`tag tag--${
+                  evt.data.type === 'battle' ? 'red' :
+                  evt.data.type === 'discovery' ? 'teal' : 'gold'
+                }`}>
+                  {evt.data.type}
+                </span>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  /* --- Hero --- */
+  .hero {
+    position: relative;
+    min-height: 50vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: calc(var(--nav-height) + var(--space-3xl)) var(--space-lg) var(--space-3xl);
+  }
+
+  .hero__overlay {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at center, rgba(139, 92, 246, 0.12) 0%, transparent 70%),
+      radial-gradient(ellipse at 30% 70%, rgba(20, 184, 166, 0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 70% 30%, rgba(245, 158, 11, 0.06) 0%, transparent 50%);
+    z-index: 0;
+  }
+
+  .hero__content {
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero__title {
+    font-size: 3.5rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--color-gold-light), var(--color-purple-light), var(--color-teal-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: var(--space-md);
+  }
+
+  .hero__subtitle {
+    font-size: 1.2rem;
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-xl);
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .hero__actions {
+    display: flex;
+    gap: var(--space-md);
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .btn--lg {
+    font-size: 1rem;
+    padding: 0.8em 2em;
+  }
+
+  /* --- Stats --- */
+  .stats-bar {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-2xl);
+    flex-wrap: wrap;
+    margin-bottom: var(--space-3xl);
+    padding: var(--space-xl) 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .stat {
+    text-align: center;
+  }
+
+  .stat__number {
+    display: block;
+    font-family: var(--font-heading);
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--color-gold-light);
+  }
+
+  .stat__label {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+  }
+
+  /* --- Nav Cards --- */
+  .home-nav {
+    margin-bottom: var(--space-3xl);
+  }
+
+  .home-nav__card {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    text-align: center;
+  }
+
+  .home-nav__icon {
+    font-size: 2.5rem;
+    margin-bottom: var(--space-md);
+  }
+
+  /* --- Home Section --- */
+  .home-section {
+    margin-top: var(--space-2xl);
+  }
+
+  .home-content {
+    padding-top: 0;
+  }
+
+  .event-date {
+    font-family: var(--font-heading);
+    font-size: 0.8rem;
+    color: var(--color-gold-light);
+    display: block;
+    margin-bottom: var(--space-xs);
+  }
+
+  @media (max-width: 768px) {
+    .hero__title {
+      font-size: 2.5rem;
+    }
+
+    .stats-bar {
+      gap: var(--space-lg);
+    }
+
+    .stat__number {
+      font-size: 1.5rem;
+    }
+  }
+</style>

@@ -1,0 +1,297 @@
+---
+/**
+ * MapOverlay: Renders clickable hotspots over the world map image.
+ * Each hotspot is positioned via CSS percentage coordinates from location frontmatter.
+ */
+interface MapLocation {
+  id: string;
+  name: string;
+  mapX: number;
+  mapY: number;
+  region?: string;
+}
+
+interface Props {
+  locations: MapLocation[];
+}
+
+const { locations } = Astro.props;
+---
+
+<div class="map-container" id="map-container">
+  <div class="map-wrapper" id="map-wrapper">
+    <img
+      src="/images/world-map.png"
+      alt="World Map"
+      class="map-image"
+      id="map-image"
+      draggable="false"
+    />
+
+    {locations.map((loc) => (
+      <a
+        href={`/locations/${loc.id}/`}
+        class="map-hotspot"
+        style={`left: ${loc.mapX}%; top: ${loc.mapY}%`}
+        data-name={loc.name}
+        data-region={loc.region || ''}
+      >
+        <span class="map-hotspot__dot"></span>
+        <span class="map-hotspot__label">{loc.name}</span>
+      </a>
+    ))}
+  </div>
+
+  <div class="map-controls">
+    <button class="map-controls__btn" id="zoom-in" aria-label="Zoom in">+</button>
+    <button class="map-controls__btn" id="zoom-out" aria-label="Zoom out">−</button>
+    <button class="map-controls__btn" id="zoom-reset" aria-label="Reset zoom">⟲</button>
+  </div>
+
+  <div class="map-tooltip" id="map-tooltip"></div>
+</div>
+
+<style>
+  .map-container {
+    position: relative;
+    width: 100%;
+    height: calc(100vh - var(--nav-height) - 80px);
+    min-height: 500px;
+    overflow: hidden;
+    border-radius: var(--border-radius-lg);
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-card);
+    cursor: grab;
+  }
+
+  .map-container:active {
+    cursor: grabbing;
+  }
+
+  .map-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-origin: 0 0;
+    transition: transform 0.1s ease-out;
+  }
+
+  .map-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    user-select: none;
+    pointer-events: none;
+  }
+
+  /* --- Hotspots --- */
+  .map-hotspot {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    text-decoration: none;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .map-hotspot__dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--color-gold);
+    border: 2px solid var(--color-gold-light);
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.5), 0 0 24px rgba(245, 158, 11, 0.2);
+    transition: all var(--transition-normal);
+    animation: pulse 3s ease-in-out infinite;
+  }
+
+  .map-hotspot:hover .map-hotspot__dot {
+    width: 20px;
+    height: 20px;
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.7), 0 0 40px rgba(245, 158, 11, 0.3);
+    background: var(--color-gold-light);
+  }
+
+  .map-hotspot__label {
+    font-family: var(--font-heading);
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--color-text-heading);
+    background: rgba(13, 10, 26, 0.85);
+    padding: 2px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: all var(--transition-fast);
+    pointer-events: none;
+    border: 1px solid var(--color-border);
+  }
+
+  .map-hotspot:hover .map-hotspot__label {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  @keyframes pulse {
+    0%,
+    100% {
+      box-shadow: 0 0 12px rgba(245, 158, 11, 0.5), 0 0 24px rgba(245, 158, 11, 0.2);
+    }
+    50% {
+      box-shadow: 0 0 18px rgba(245, 158, 11, 0.6), 0 0 36px rgba(245, 158, 11, 0.3);
+    }
+  }
+
+  /* --- Controls --- */
+  .map-controls {
+    position: absolute;
+    bottom: var(--space-lg);
+    right: var(--space-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    z-index: 20;
+  }
+
+  .map-controls__btn {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--color-border);
+    background: rgba(13, 10, 26, 0.9);
+    color: var(--color-text);
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+  }
+
+  .map-controls__btn:hover {
+    border-color: var(--color-purple);
+    box-shadow: var(--glow-purple);
+    color: var(--color-text-heading);
+  }
+
+  /* --- Tooltip (for touch devices) --- */
+  .map-tooltip {
+    display: none;
+    position: absolute;
+    z-index: 30;
+    background: rgba(13, 10, 26, 0.95);
+    border: 1px solid var(--color-gold);
+    border-radius: var(--border-radius);
+    padding: var(--space-sm) var(--space-md);
+    font-family: var(--font-heading);
+    font-size: 0.85rem;
+    color: var(--color-text-heading);
+    pointer-events: none;
+    box-shadow: var(--glow-gold);
+  }
+</style>
+
+<script>
+  const container = document.getElementById('map-container')!;
+  const wrapper = document.getElementById('map-wrapper')!;
+  const zoomIn = document.getElementById('zoom-in')!;
+  const zoomOut = document.getElementById('zoom-out')!;
+  const zoomReset = document.getElementById('zoom-reset')!;
+
+  let scale = 1;
+  let panX = 0;
+  let panY = 0;
+  let isDragging = false;
+  let startX = 0;
+  let startY = 0;
+
+  function updateTransform() {
+    wrapper.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+  }
+
+  zoomIn.addEventListener('click', () => {
+    scale = Math.min(scale * 1.3, 5);
+    updateTransform();
+  });
+
+  zoomOut.addEventListener('click', () => {
+    scale = Math.max(scale / 1.3, 0.5);
+    updateTransform();
+  });
+
+  zoomReset.addEventListener('click', () => {
+    scale = 1;
+    panX = 0;
+    panY = 0;
+    updateTransform();
+  });
+
+  // Mouse wheel zoom
+  container.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const factor = e.deltaY < 0 ? 1.1 : 0.9;
+    scale = Math.min(Math.max(scale * factor, 0.5), 5);
+    updateTransform();
+  }, { passive: false });
+
+  // Pan via drag
+  container.addEventListener('mousedown', (e) => {
+    if ((e.target as HTMLElement).closest('.map-hotspot') || (e.target as HTMLElement).closest('.map-controls__btn')) return;
+    isDragging = true;
+    startX = e.clientX - panX;
+    startY = e.clientY - panY;
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    panX = e.clientX - startX;
+    panY = e.clientY - startY;
+    updateTransform();
+  });
+
+  window.addEventListener('mouseup', () => {
+    isDragging = false;
+  });
+
+  // Touch support
+  let lastTouchDist = 0;
+  container.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 1) {
+      isDragging = true;
+      startX = e.touches[0].clientX - panX;
+      startY = e.touches[0].clientY - panY;
+    } else if (e.touches.length === 2) {
+      isDragging = false;
+      lastTouchDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+    }
+  }, { passive: true });
+
+  container.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 1 && isDragging) {
+      panX = e.touches[0].clientX - startX;
+      panY = e.touches[0].clientY - startY;
+      updateTransform();
+    } else if (e.touches.length === 2) {
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      if (lastTouchDist > 0) {
+        scale = Math.min(Math.max(scale * (dist / lastTouchDist), 0.5), 5);
+        updateTransform();
+      }
+      lastTouchDist = dist;
+    }
+  }, { passive: true });
+
+  container.addEventListener('touchend', () => {
+    isDragging = false;
+    lastTouchDist = 0;
+  });
+</script>

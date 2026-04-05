@@ -1,0 +1,180 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const characters = await getCollection('characters');
+  return characters.map((c) => ({
+    params: { slug: c.id },
+    props: { character: c },
+  }));
+}
+
+const { character } = Astro.props;
+const { Content } = await render(character);
+
+const allEvents = await getCollection('events');
+const relatedEvents = allEvents
+  .filter((e) => e.data.characters.includes(character.id))
+  .sort((a, b) => a.data.sortOrder - b.data.sortOrder);
+
+const allLocations = await getCollection('locations');
+const homeLocation = character.data.location
+  ? allLocations.find((l) => l.id === character.data.location)
+  : null;
+---
+
+<BaseLayout title={character.data.name}>
+  <div class="page-content">
+    <div class="container">
+      <a href="/characters/" class="btn back-btn">← All Characters</a>
+
+      <article class="char-detail">
+        <div class="char-detail__header">
+          {character.data.image ? (
+            <img src={character.data.image} alt={character.data.name} class="char-detail__portrait" />
+          ) : (
+            <div class="char-detail__portrait char-detail__portrait--placeholder">
+              <span>{character.data.name[0]}</span>
+            </div>
+          )}
+
+          <div class="char-detail__info">
+            <h1>{character.data.name}</h1>
+            <div class="char-detail__stats">
+              <span class="tag tag--teal">{character.data.race}</span>
+              <span class="tag">{character.data.class}</span>
+              {character.data.level && (
+                <span class="tag tag--gold">Level {character.data.level}</span>
+              )}
+              <span class={`tag ${
+                character.data.status === 'active' ? 'tag--teal' :
+                character.data.status === 'deceased' ? 'tag--red' : 'tag--gold'
+              }`}>
+                {character.data.status}
+              </span>
+            </div>
+            {homeLocation && (
+              <p class="char-detail__location">
+                Location: <a href={`/locations/${homeLocation.id}/`}>{homeLocation.data.name}</a>
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div class="prose">
+          <Content />
+        </div>
+
+        {relatedEvents.length > 0 && (
+          <section class="related-section">
+            <h2>Events</h2>
+            <div class="event-list">
+              {relatedEvents.map((e) => (
+                <a href={`/events/${e.id}/`} class="card event-item">
+                  <span class="event-item__date">{e.data.date}</span>
+                  <h4 class="card-title">{e.data.title}</h4>
+                  <p class="card-meta">{e.data.description}</p>
+                </a>
+              ))}
+            </div>
+          </section>
+        )}
+      </article>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .back-btn {
+    margin-bottom: var(--space-xl);
+    font-size: 0.8rem;
+    display: inline-flex;
+  }
+
+  .char-detail__header {
+    display: flex;
+    gap: var(--space-xl);
+    align-items: flex-start;
+    margin-bottom: var(--space-2xl);
+    flex-wrap: wrap;
+  }
+
+  .char-detail__portrait {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--color-purple);
+    box-shadow: var(--glow-purple);
+    flex-shrink: 0;
+  }
+
+  .char-detail__portrait--placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-bg-elevated);
+    font-family: var(--font-heading);
+    font-size: 4rem;
+    color: var(--color-purple-light);
+  }
+
+  .char-detail__info h1 {
+    font-size: 2.2rem;
+    margin-bottom: var(--space-md);
+  }
+
+  .char-detail__stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
+  }
+
+  .char-detail__location {
+    color: var(--color-text-muted);
+    font-size: 0.95rem;
+    margin-bottom: var(--space-xs);
+  }
+
+  .related-section {
+    margin-top: var(--space-3xl);
+  }
+
+  .related-section h2 {
+    color: var(--color-gold-light);
+    margin-bottom: var(--space-lg);
+  }
+
+  .event-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+
+  .event-item {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    border-left: 3px solid var(--color-teal);
+  }
+
+  .event-item__date {
+    font-family: var(--font-heading);
+    font-size: 0.8rem;
+    color: var(--color-teal-light);
+  }
+
+  @media (max-width: 600px) {
+    .char-detail__header {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .char-detail__stats {
+      justify-content: center;
+    }
+  }
+</style>

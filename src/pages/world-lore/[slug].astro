@@ -1,0 +1,148 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const articles = await getCollection('world-lore');
+  return articles.map((article) => ({
+    params: { slug: article.id },
+    props: { article },
+  }));
+}
+
+const { article } = Astro.props;
+const { Content, headings } = await render(article);
+---
+
+<BaseLayout title={article.data.title}>
+  <div class="page-content">
+    <div class="container">
+      <a href="/world-lore/" class="btn back-btn">← All World Lore</a>
+
+      <div class="lore-layout">
+        {headings.length > 2 && (
+          <aside class="toc">
+            <h4 class="toc__title">Contents</h4>
+            <nav>
+              <ul class="toc__list">
+                {headings.map((h) => (
+                  <li class={`toc__item toc__item--${h.depth}`}>
+                    <a href={`#${h.slug}`}>{h.text}</a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          </aside>
+        )}
+
+        <article class="lore-content">
+          {article.data.image && (
+            <img src={article.data.image} alt={article.data.title} class="lore-content__hero" />
+          )}
+
+          <h1>{article.data.title}</h1>
+
+          <div class="lore-content__meta">
+            <span class="tag tag--teal">{article.data.category}</span>
+            {article.data.tags.map((tag) => (
+              <span class="tag">{tag}</span>
+            ))}
+          </div>
+
+          <div class="prose">
+            <Content />
+          </div>
+        </article>
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .back-btn {
+    margin-bottom: var(--space-xl);
+    font-size: 0.8rem;
+    display: inline-flex;
+  }
+
+  .lore-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-2xl);
+  }
+
+  @media (min-width: 900px) {
+    .lore-layout {
+      grid-template-columns: 220px 1fr;
+    }
+  }
+
+  /* Table of Contents */
+  .toc {
+    position: sticky;
+    top: calc(var(--nav-height) + var(--space-xl));
+    align-self: start;
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-lg);
+    padding: var(--space-lg);
+  }
+
+  .toc__title {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-md);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .toc__list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .toc__item {
+    margin-bottom: var(--space-xs);
+  }
+
+  .toc__item a {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    transition: color var(--transition-fast);
+  }
+
+  .toc__item a:hover {
+    color: var(--color-gold-light);
+  }
+
+  .toc__item--3 {
+    padding-left: var(--space-md);
+  }
+
+  .toc__item--4 {
+    padding-left: var(--space-xl);
+  }
+
+  /* Content */
+  .lore-content__hero {
+    width: 100%;
+    max-height: 350px;
+    object-fit: cover;
+    border-radius: var(--border-radius-lg);
+    border: 1px solid var(--color-border);
+    margin-bottom: var(--space-xl);
+  }
+
+  .lore-content h1 {
+    font-size: 2.2rem;
+    margin-bottom: var(--space-md);
+  }
+
+  .lore-content__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-xl);
+  }
+</style>

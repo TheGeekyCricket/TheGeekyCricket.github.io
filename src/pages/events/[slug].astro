@@ -1,0 +1,143 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const events = await getCollection('events');
+  return events.map((evt) => ({
+    params: { slug: evt.id },
+    props: { event: evt },
+  }));
+}
+
+const { event } = Astro.props;
+const { Content } = await render(event);
+
+const allLocations = await getCollection('locations');
+const location = event.data.location
+  ? allLocations.find((l) => l.id === event.data.location)
+  : null;
+
+const allCharacters = await getCollection('characters');
+const allNpcs = await getCollection('npcs');
+const involvedCharacters = allCharacters.filter((c) =>
+  event.data.characters.includes(c.id)
+);
+const involvedNpcs = allNpcs.filter((n) =>
+  event.data.characters.includes(n.id)
+);
+---
+
+<BaseLayout title={event.data.title}>
+  <div class="page-content">
+    <div class="container">
+      <a href="/timeline/" class="btn back-btn">← Timeline</a>
+
+      <article class="event-detail">
+        {event.data.image && (
+          <img src={event.data.image} alt={event.data.title} class="event-detail__hero" />
+        )}
+
+        <h1>{event.data.title}</h1>
+
+        <div class="event-detail__meta">
+          <span class="event-detail__date">📅 {event.data.date}</span>
+          <span class={`tag tag--${event.data.type === 'battle' ? 'red' : event.data.type === 'discovery' ? 'teal' : 'gold'}`}>
+            {event.data.type}
+          </span>
+          {location && (
+            <a href={`/locations/${location.id}/`} class="tag tag--teal">
+              📍 {location.data.name}
+            </a>
+          )}
+        </div>
+
+        <p class="event-detail__description">{event.data.description}</p>
+
+        <div class="prose">
+          <Content />
+        </div>
+
+        {(involvedCharacters.length > 0 || involvedNpcs.length > 0) && (
+          <section class="related-section">
+            <h2>Characters Involved</h2>
+            <div class="grid grid--4">
+              {involvedCharacters.map((c) => (
+                <a href={`/characters/${c.id}/`} class="card mini-card">
+                  <h4 class="card-title">{c.data.name}</h4>
+                  <p class="card-meta">{c.data.race} {c.data.class}</p>
+                </a>
+              ))}
+              {involvedNpcs.map((n) => (
+                <a href={`/npcs/${n.id}/`} class="card mini-card">
+                  <h4 class="card-title">{n.data.name}</h4>
+                  <p class="card-meta">{n.data.role || 'NPC'}</p>
+                </a>
+              ))}
+            </div>
+          </section>
+        )}
+      </article>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .back-btn {
+    margin-bottom: var(--space-xl);
+    font-size: 0.8rem;
+    display: inline-flex;
+  }
+
+  .event-detail__hero {
+    width: 100%;
+    max-height: 350px;
+    object-fit: cover;
+    border-radius: var(--border-radius-lg);
+    border: 1px solid var(--color-border);
+    margin-bottom: var(--space-xl);
+  }
+
+  .event-detail h1 {
+    font-size: 2.2rem;
+    margin-bottom: var(--space-md);
+  }
+
+  .event-detail__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-xl);
+  }
+
+  .event-detail__date {
+    font-family: var(--font-heading);
+    font-size: 0.95rem;
+    color: var(--color-gold-light);
+  }
+
+  .event-detail__description {
+    font-size: 1.1rem;
+    color: var(--color-text-muted);
+    line-height: 1.8;
+    border-left: 3px solid var(--color-teal);
+    padding-left: var(--space-lg);
+    margin-bottom: var(--space-xl);
+  }
+
+  .related-section {
+    margin-top: var(--space-3xl);
+  }
+
+  .related-section h2 {
+    color: var(--color-gold-light);
+    margin-bottom: var(--space-lg);
+  }
+
+  .mini-card {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+  }
+</style>

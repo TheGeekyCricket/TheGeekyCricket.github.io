@@ -1,0 +1,338 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Map Coordinate Picker">
+  <div class="page-content">
+    <div class="container">
+      <h1 class="section-title">Map Coordinate Picker</h1>
+      <p class="picker-intro">
+        Click anywhere on the map to get the <code>mapX</code> and <code>mapY</code> values
+        for placing a location hotspot. Copy the values into your location's markdown file.
+      </p>
+
+      <div class="picker-output" id="picker-output">
+        <div class="coord-display">
+          <span class="coord-label">mapX:</span>
+          <span class="coord-value" id="coord-x">—</span>
+        </div>
+        <div class="coord-display">
+          <span class="coord-label">mapY:</span>
+          <span class="coord-value" id="coord-y">—</span>
+        </div>
+        <button class="btn btn--primary" id="copy-btn" disabled>📋 Copy to Clipboard</button>
+      </div>
+
+      <div class="picker-map" id="picker-map">
+        <img
+          src="/images/world-map.png"
+          alt="World Map"
+          class="picker-map__image"
+          id="map-image"
+          draggable="false"
+        />
+        <div class="picker-map__crosshair" id="crosshair"></div>
+        <div class="picker-map__pin-list" id="pin-list"></div>
+      </div>
+
+      <div class="pins-log">
+        <h3>Saved Pins</h3>
+        <p class="picker-intro">Click the map to add pins. Double-click a pin to remove it.</p>
+        <table class="pins-table" id="pins-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>mapX</th>
+              <th>mapY</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="pins-body"></tbody>
+        </table>
+        <button class="btn" id="copy-all-btn" style="margin-top: var(--space-md);">📋 Copy All Pins</button>
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .picker-intro {
+    text-align: center;
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-lg);
+  }
+
+  .picker-intro code {
+    background: var(--color-bg-elevated);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+    font-size: 0.9em;
+    color: var(--color-gold-light);
+  }
+
+  /* --- Output Display --- */
+  .picker-output {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-xl);
+    margin-bottom: var(--space-xl);
+    padding: var(--space-lg);
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-lg);
+    flex-wrap: wrap;
+  }
+
+  .coord-display {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-sm);
+  }
+
+  .coord-label {
+    font-family: var(--font-heading);
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+  }
+
+  .coord-value {
+    font-family: monospace;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--color-gold-light);
+    min-width: 60px;
+  }
+
+  /* --- Map Container --- */
+  .picker-map {
+    position: relative;
+    border: 2px solid var(--color-border);
+    border-radius: var(--border-radius-lg);
+    overflow: hidden;
+    cursor: crosshair;
+    margin-bottom: var(--space-2xl);
+  }
+
+  .picker-map__image {
+    width: 100%;
+    display: block;
+    user-select: none;
+    pointer-events: none;
+  }
+
+  .picker-map__crosshair {
+    display: none;
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--color-gold);
+    border: 3px solid #fff;
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.7), 0 0 24px rgba(245, 158, 11, 0.3);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 10;
+    transition: left 0.05s, top 0.05s;
+  }
+
+  .picker-map__crosshair--visible {
+    display: block;
+  }
+
+  /* Saved pins on map */
+  .saved-pin {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--color-purple);
+    border: 2px solid var(--color-purple-light);
+    box-shadow: 0 0 8px rgba(139, 92, 246, 0.5);
+    transform: translate(-50%, -50%);
+    cursor: pointer;
+    z-index: 5;
+    transition: all var(--transition-fast);
+  }
+
+  .saved-pin:hover {
+    background: var(--color-red);
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.6);
+    transform: translate(-50%, -50%) scale(1.3);
+  }
+
+  .saved-pin__label {
+    position: absolute;
+    top: -22px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--font-heading);
+    font-size: 0.65rem;
+    color: var(--color-text-heading);
+    background: rgba(13, 10, 26, 0.9);
+    padding: 1px 6px;
+    border-radius: 3px;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  /* --- Pins Log --- */
+  .pins-log {
+    margin-bottom: var(--space-2xl);
+  }
+
+  .pins-log h3 {
+    margin-bottom: var(--space-md);
+    color: var(--color-gold-light);
+  }
+
+  .pins-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: var(--space-md);
+  }
+
+  .pins-table th,
+  .pins-table td {
+    padding: var(--space-sm) var(--space-md);
+    border: 1px solid var(--color-border);
+    text-align: center;
+    font-size: 0.9rem;
+  }
+
+  .pins-table th {
+    background: var(--color-bg-elevated);
+    font-family: var(--font-heading);
+    font-weight: 600;
+    color: var(--color-text-heading);
+  }
+
+  .pins-table td {
+    font-family: monospace;
+    color: var(--color-text);
+  }
+
+  .pin-remove-btn {
+    background: none;
+    border: 1px solid var(--color-border);
+    color: var(--color-red);
+    padding: 0.2em 0.6em;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all var(--transition-fast);
+  }
+
+  .pin-remove-btn:hover {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: var(--color-red);
+  }
+</style>
+
+<script>
+  const mapContainer = document.getElementById('picker-map')!;
+  const mapImage = document.getElementById('map-image')! as HTMLImageElement;
+  const crosshair = document.getElementById('crosshair')!;
+  const coordX = document.getElementById('coord-x')!;
+  const coordY = document.getElementById('coord-y')!;
+  const copyBtn = document.getElementById('copy-btn')! as HTMLButtonElement;
+  const copyAllBtn = document.getElementById('copy-all-btn')!;
+  const pinList = document.getElementById('pin-list')!;
+  const pinsBody = document.getElementById('pins-body')!;
+
+  let lastX = 0;
+  let lastY = 0;
+  interface Pin { x: number; y: number; }
+  const pins: Pin[] = [];
+
+  function getPercentCoords(e: MouseEvent): { x: number; y: number } {
+    const rect = mapContainer.getBoundingClientRect();
+    const x = Math.round(((e.clientX - rect.left) / rect.width) * 1000) / 10;
+    const y = Math.round(((e.clientY - rect.top) / rect.height) * 1000) / 10;
+    return {
+      x: Math.max(0, Math.min(100, x)),
+      y: Math.max(0, Math.min(100, y)),
+    };
+  }
+
+  mapContainer.addEventListener('mousemove', (e) => {
+    const { x, y } = getPercentCoords(e);
+    crosshair.style.left = `${x}%`;
+    crosshair.style.top = `${y}%`;
+    crosshair.classList.add('picker-map__crosshair--visible');
+    coordX.textContent = x.toFixed(1);
+    coordY.textContent = y.toFixed(1);
+  });
+
+  mapContainer.addEventListener('mouseleave', () => {
+    crosshair.classList.remove('picker-map__crosshair--visible');
+  });
+
+  mapContainer.addEventListener('click', (e) => {
+    if ((e.target as HTMLElement).classList.contains('saved-pin')) return;
+    const { x, y } = getPercentCoords(e);
+    lastX = x;
+    lastY = y;
+    coordX.textContent = x.toFixed(1);
+    coordY.textContent = y.toFixed(1);
+    copyBtn.disabled = false;
+
+    // Add pin
+    pins.push({ x, y });
+    renderPins();
+  });
+
+  copyBtn.addEventListener('click', () => {
+    const text = `mapX: ${lastX}\nmapY: ${lastY}`;
+    navigator.clipboard.writeText(text).then(() => {
+      copyBtn.textContent = '✅ Copied!';
+      setTimeout(() => { copyBtn.textContent = '📋 Copy to Clipboard'; }, 1500);
+    });
+  });
+
+  copyAllBtn.addEventListener('click', () => {
+    if (pins.length === 0) return;
+    const lines = pins.map((p, i) => `Pin ${i + 1}: mapX: ${p.x}, mapY: ${p.y}`).join('\n');
+    navigator.clipboard.writeText(lines).then(() => {
+      copyAllBtn.textContent = '✅ Copied All!';
+      setTimeout(() => { copyAllBtn.textContent = '📋 Copy All Pins'; }, 1500);
+    });
+  });
+
+  function removePin(index: number) {
+    pins.splice(index, 1);
+    renderPins();
+  }
+
+  function renderPins() {
+    // Render map pins
+    pinList.innerHTML = '';
+    pins.forEach((pin, i) => {
+      const el = document.createElement('div');
+      el.className = 'saved-pin';
+      el.style.left = `${pin.x}%`;
+      el.style.top = `${pin.y}%`;
+      el.title = `Pin ${i + 1}: (${pin.x}, ${pin.y}) — Double-click to remove`;
+      el.innerHTML = `<span class="saved-pin__label">${i + 1}</span>`;
+      el.addEventListener('dblclick', (e) => {
+        e.stopPropagation();
+        removePin(i);
+      });
+      pinList.appendChild(el);
+    });
+
+    // Render table rows
+    pinsBody.innerHTML = '';
+    pins.forEach((pin, i) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${i + 1}</td>
+        <td>${pin.x}</td>
+        <td>${pin.y}</td>
+        <td><button class="pin-remove-btn" data-index="${i}">✕ Remove</button></td>
+      `;
+      tr.querySelector('.pin-remove-btn')!.addEventListener('click', () => removePin(i));
+      pinsBody.appendChild(tr);
+    });
+  }
+</script>

@@ -1,0 +1,119 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const articles = await getCollection('world-lore');
+
+const categories = new Map<string, typeof articles>();
+for (const article of articles) {
+  const cat = article.data.category;
+  if (!categories.has(cat)) categories.set(cat, []);
+  categories.get(cat)!.push(article);
+}
+
+// Sort each category by order
+for (const [, arts] of categories) {
+  arts.sort((a, b) => a.data.order - b.data.order);
+}
+
+const categoryLabels: Record<string, string> = {
+  history: '📜 History',
+  factions: '⚔️ Factions & Organizations',
+  magic: '✨ Magic & Arcana',
+  religions: '🙏 Religions & Deities',
+  geography: '🗺️ Geography & Climate',
+  cultures: '👥 Cultures & Peoples',
+  other: '📖 Other Lore',
+};
+---
+
+<BaseLayout title="World Lore">
+  <div class="page-content">
+    <div class="container">
+      <h1 class="section-title">World Lore</h1>
+
+      {articles.length === 0 && (
+        <p class="empty-state">No lore articles have been added yet. Check back soon!</p>
+      )}
+
+      {[...categories.entries()].map(([cat, arts]) => (
+        <section class="lore-category">
+          <h2 class="category-title">{categoryLabels[cat] || cat}</h2>
+          <div class="lore-list">
+            {arts.map((article) => (
+              <a href={`/world-lore/${article.id}/`} class="card lore-card">
+                <div class="lore-card__content">
+                  {article.data.image && (
+                    <img src={article.data.image} alt={article.data.title} class="lore-card__image" />
+                  )}
+                  <div>
+                    <h3 class="card-title">{article.data.title}</h3>
+                    {article.data.tags.length > 0 && (
+                      <div class="card-tags">
+                        {article.data.tags.map((tag) => (
+                          <span class="tag">{tag}</span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </a>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .empty-state {
+    text-align: center;
+    color: var(--color-text-muted);
+    font-size: 1.1rem;
+    padding: var(--space-3xl) 0;
+  }
+
+  .lore-category {
+    margin-bottom: var(--space-3xl);
+  }
+
+  .category-title {
+    margin-bottom: var(--space-lg);
+    font-size: 1.3rem;
+    color: var(--color-teal-light);
+  }
+
+  .lore-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+
+  .lore-card {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .lore-card__content {
+    display: flex;
+    gap: var(--space-lg);
+    align-items: center;
+  }
+
+  .lore-card__image {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: var(--border-radius);
+    flex-shrink: 0;
+  }
+
+  .card-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+    margin-top: var(--space-sm);
+  }
+</style>

@@ -1,0 +1,36 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import MapOverlay from '../components/MapOverlay.astro';
+import { getCollection } from 'astro:content';
+
+const locations = await getCollection('locations');
+const mapLocations = locations.map((loc) => ({
+  id: loc.id,
+  name: loc.data.name,
+  mapX: loc.data.mapX,
+  mapY: loc.data.mapY,
+  region: loc.data.region,
+}));
+---
+
+<BaseLayout title="World Map">
+  <div class="page-content">
+    <div class="container">
+      <h1 class="section-title">World Map</h1>
+      <p class="map-intro">
+        Click on a location to explore its lore, characters, and history.
+        Scroll to zoom, drag to pan.
+      </p>
+      <MapOverlay locations={mapLocations} />
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .map-intro {
+    text-align: center;
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-lg);
+    font-size: 0.95rem;
+  }
+</style>

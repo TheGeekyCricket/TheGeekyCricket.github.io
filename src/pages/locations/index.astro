@@ -1,0 +1,82 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const locations = await getCollection('locations');
+
+// Group by region
+const regions = new Map<string, typeof locations>();
+for (const loc of locations) {
+  const region = loc.data.region || 'Unknown Region';
+  if (!regions.has(region)) regions.set(region, []);
+  regions.get(region)!.push(loc);
+}
+---
+
+<BaseLayout title="Locations">
+  <div class="page-content">
+    <div class="container">
+      <h1 class="section-title">Locations</h1>
+
+      {locations.length === 0 && (
+        <p class="empty-state">No locations have been added yet. Check back soon!</p>
+      )}
+
+      {[...regions.entries()].map(([region, locs]) => (
+        <section class="region-group">
+          <h2 class="region-title">{region}</h2>
+          <div class="grid grid--3">
+            {locs.map((loc) => (
+              <a href={`/locations/${loc.id}/`} class="card location-card">
+                {loc.data.image && (
+                  <img src={loc.data.image} alt={loc.data.name} class="card-image" />
+                )}
+                <h3 class="card-title">{loc.data.name}</h3>
+                <p class="card-meta">{loc.data.description}</p>
+                {loc.data.tags.length > 0 && (
+                  <div class="card-tags">
+                    {loc.data.tags.map((tag) => (
+                      <span class="tag">{tag}</span>
+                    ))}
+                  </div>
+                )}
+              </a>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .empty-state {
+    text-align: center;
+    color: var(--color-text-muted);
+    font-size: 1.1rem;
+    padding: var(--space-3xl) 0;
+  }
+
+  .region-group {
+    margin-bottom: var(--space-3xl);
+  }
+
+  .region-title {
+    margin-bottom: var(--space-lg);
+    color: var(--color-teal-light);
+    font-size: 1.3rem;
+  }
+
+  .location-card {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .card-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+    margin-top: var(--space-sm);
+  }
+</style>

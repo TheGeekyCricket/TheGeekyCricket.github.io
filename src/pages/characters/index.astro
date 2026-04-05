@@ -1,0 +1,178 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const characters = await getCollection('characters');
+
+const statusGroups = {
+  active: characters.filter((c) => c.data.status === 'active'),
+  retired: characters.filter((c) => c.data.status === 'retired'),
+  deceased: characters.filter((c) => c.data.status === 'deceased'),
+};
+---
+
+<BaseLayout title="Characters">
+  <div class="page-content">
+    <div class="container">
+      <h1 class="section-title">Player Characters</h1>
+
+      {characters.length === 0 && (
+        <p class="empty-state">No characters have been added yet. Check back soon!</p>
+      )}
+
+      {statusGroups.active.length > 0 && (
+        <section class="char-group">
+          <h2 class="group-title">
+            <span class="status-dot status-dot--active"></span> Active Adventurers
+          </h2>
+          <div class="grid grid--3">
+            {statusGroups.active.map((c) => (
+              <a href={`/characters/${c.id}/`} class="card char-card">
+                {c.data.image ? (
+                  <img src={c.data.image} alt={c.data.name} class="char-card__portrait" />
+                ) : (
+                  <div class="char-card__portrait char-card__portrait--placeholder">
+                    <span>{c.data.name[0]}</span>
+                  </div>
+                )}
+                <h3 class="card-title">{c.data.name}</h3>
+                <p class="card-meta">
+                  {c.data.race} {c.data.class}
+                  {c.data.level ? ` · Level ${c.data.level}` : ''}
+                </p>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {statusGroups.retired.length > 0 && (
+        <section class="char-group">
+          <h2 class="group-title">
+            <span class="status-dot status-dot--retired"></span> Retired
+          </h2>
+          <div class="grid grid--3">
+            {statusGroups.retired.map((c) => (
+              <a href={`/characters/${c.id}/`} class="card char-card">
+                {c.data.image ? (
+                  <img src={c.data.image} alt={c.data.name} class="char-card__portrait" />
+                ) : (
+                  <div class="char-card__portrait char-card__portrait--placeholder">
+                    <span>{c.data.name[0]}</span>
+                  </div>
+                )}
+                <h3 class="card-title">{c.data.name}</h3>
+                <p class="card-meta">{c.data.race} {c.data.class}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {statusGroups.deceased.length > 0 && (
+        <section class="char-group">
+          <h2 class="group-title">
+            <span class="status-dot status-dot--deceased"></span> Fallen Heroes
+          </h2>
+          <div class="grid grid--3">
+            {statusGroups.deceased.map((c) => (
+              <a href={`/characters/${c.id}/`} class="card char-card char-card--fallen">
+                {c.data.image ? (
+                  <img src={c.data.image} alt={c.data.name} class="char-card__portrait" />
+                ) : (
+                  <div class="char-card__portrait char-card__portrait--placeholder">
+                    <span>{c.data.name[0]}</span>
+                  </div>
+                )}
+                <h3 class="card-title">{c.data.name}</h3>
+                <p class="card-meta">{c.data.race} {c.data.class}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .empty-state {
+    text-align: center;
+    color: var(--color-text-muted);
+    font-size: 1.1rem;
+    padding: var(--space-3xl) 0;
+  }
+
+  .char-group {
+    margin-bottom: var(--space-3xl);
+  }
+
+  .group-title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-lg);
+    font-size: 1.3rem;
+  }
+
+  .status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+
+  .status-dot--active {
+    background: var(--color-green);
+    box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+  }
+
+  .status-dot--retired {
+    background: var(--color-gold);
+    box-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
+  }
+
+  .status-dot--deceased {
+    background: var(--color-red);
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+  }
+
+  .char-card {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    text-align: center;
+  }
+
+  .char-card__portrait {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin: 0 auto var(--space-md);
+    border: 2px solid var(--color-border);
+    transition: border-color var(--transition-normal);
+  }
+
+  .char-card:hover .char-card__portrait {
+    border-color: var(--color-purple);
+    box-shadow: var(--glow-purple);
+  }
+
+  .char-card__portrait--placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-bg-elevated);
+    font-family: var(--font-heading);
+    font-size: 2rem;
+    color: var(--color-purple-light);
+  }
+
+  .char-card--fallen {
+    opacity: 0.7;
+  }
+
+  .char-card--fallen:hover {
+    opacity: 1;
+  }
+</style>

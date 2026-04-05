@@ -1,0 +1,205 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const locations = await getCollection('locations');
+  return locations.map((loc) => ({
+    params: { slug: loc.id },
+    props: { location: loc },
+  }));
+}
+
+const { location } = Astro.props;
+const { Content } = await render(location);
+
+// Get related characters and events
+const allCharacters = await getCollection('characters');
+const allNpcs = await getCollection('npcs');
+const allEvents = await getCollection('events');
+
+const relatedCharacters = allCharacters.filter(
+  (c) => c.data.location === location.id
+);
+const relatedNpcs = allNpcs.filter((n) => n.data.location === location.id);
+const relatedEvents = allEvents.filter(
+  (e) => e.data.location === location.id
+);
+---
+
+<BaseLayout title={location.data.name}>
+  <div class="page-content">
+    <div class="container">
+      <div class="detail-header">
+        <a href="/map/" class="btn back-btn">← Back to Map</a>
+        <a href="/locations/" class="btn back-btn">← All Locations</a>
+      </div>
+
+      <article class="detail">
+        {location.data.image && (
+          <img
+            src={location.data.image}
+            alt={location.data.name}
+            class="detail__hero"
+          />
+        )}
+
+        <h1 class="detail__title">{location.data.name}</h1>
+
+        <div class="detail__meta">
+          {location.data.region && (
+            <span class="tag tag--teal">{location.data.region}</span>
+          )}
+          {location.data.tags.map((tag) => (
+            <span class="tag">{tag}</span>
+          ))}
+        </div>
+
+        <p class="detail__description">{location.data.description}</p>
+
+        <div class="prose">
+          <Content />
+        </div>
+
+        {relatedCharacters.length > 0 && (
+          <section class="related-section">
+            <h2>Characters at this Location</h2>
+            <div class="grid grid--4">
+              {relatedCharacters.map((c) => (
+                <a href={`/characters/${c.id}/`} class="card mini-card">
+                  {c.data.image && (
+                    <img src={c.data.image} alt={c.data.name} class="mini-card__img" />
+                  )}
+                  <h4 class="card-title">{c.data.name}</h4>
+                  <p class="card-meta">{c.data.race} {c.data.class}</p>
+                </a>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {relatedNpcs.length > 0 && (
+          <section class="related-section">
+            <h2>NPCs at this Location</h2>
+            <div class="grid grid--4">
+              {relatedNpcs.map((n) => (
+                <a href={`/npcs/${n.id}/`} class="card mini-card">
+                  {n.data.image && (
+                    <img src={n.data.image} alt={n.data.name} class="mini-card__img" />
+                  )}
+                  <h4 class="card-title">{n.data.name}</h4>
+                  <p class="card-meta">{n.data.role || n.data.faction}</p>
+                </a>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {relatedEvents.length > 0 && (
+          <section class="related-section">
+            <h2>Events at this Location</h2>
+            <div class="timeline-mini">
+              {relatedEvents
+                .sort((a, b) => a.data.sortOrder - b.data.sortOrder)
+                .map((e) => (
+                  <a href={`/events/${e.id}/`} class="timeline-mini__item card">
+                    <span class="timeline-mini__date">{e.data.date}</span>
+                    <h4 class="card-title">{e.data.title}</h4>
+                    <p class="card-meta">{e.data.description}</p>
+                  </a>
+                ))}
+            </div>
+          </section>
+        )}
+      </article>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .detail-header {
+    display: flex;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-xl);
+    flex-wrap: wrap;
+  }
+
+  .back-btn {
+    font-size: 0.8rem;
+  }
+
+  .detail__hero {
+    width: 100%;
+    max-height: 400px;
+    object-fit: cover;
+    border-radius: var(--border-radius-lg);
+    border: 1px solid var(--color-border);
+    margin-bottom: var(--space-xl);
+  }
+
+  .detail__title {
+    font-size: 2.5rem;
+    margin-bottom: var(--space-md);
+  }
+
+  .detail__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-lg);
+  }
+
+  .detail__description {
+    font-size: 1.1rem;
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-xl);
+    line-height: 1.8;
+    border-left: 3px solid var(--color-purple);
+    padding-left: var(--space-lg);
+  }
+
+  .related-section {
+    margin-top: var(--space-3xl);
+  }
+
+  .related-section h2 {
+    margin-bottom: var(--space-lg);
+    font-size: 1.4rem;
+    color: var(--color-gold-light);
+  }
+
+  .mini-card {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+  }
+
+  .mini-card__img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: var(--border-radius);
+    margin-bottom: var(--space-sm);
+  }
+
+  .timeline-mini {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+
+  .timeline-mini__item {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    border-left: 3px solid var(--color-teal);
+  }
+
+  .timeline-mini__date {
+    font-family: var(--font-heading);
+    font-size: 0.8rem;
+    color: var(--color-teal-light);
+    display: block;
+    margin-bottom: var(--space-xs);
+  }
+</style>

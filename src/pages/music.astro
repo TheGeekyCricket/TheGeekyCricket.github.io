@@ -1,0 +1,207 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const tracks = await getCollection('music');
+const allMoods = [...new Set(tracks.flatMap((t) => t.data.mood))].sort();
+---
+
+<BaseLayout title="Music">
+  <div class="page-content">
+    <div class="container">
+      <h1 class="section-title">Music Library</h1>
+      <p class="music-intro">
+        Listen to original music from our world. Click play to preview, or download tracks to enjoy offline.
+      </p>
+
+      {tracks.length === 0 && (
+        <p class="empty-state">No music has been added yet. Check back soon!</p>
+      )}
+
+      {tracks.length > 0 && allMoods.length > 0 && (
+        <div class="music-filters">
+          <button class="filter-btn filter-btn--active" data-mood="">All</button>
+          {allMoods.map((mood) => (
+            <button class="filter-btn" data-mood={mood}>{mood}</button>
+          ))}
+        </div>
+      )}
+
+      <div class="music-grid grid grid--3" id="music-grid">
+        {tracks.map((track) => (
+          <div
+            class="card music-card"
+            data-moods={track.data.mood.join(',')}
+          >
+            {track.data.coverArt ? (
+              <img src={track.data.coverArt} alt={track.data.title} class="music-card__art" />
+            ) : (
+              <div class="music-card__art music-card__art--placeholder">
+                <span>🎵</span>
+              </div>
+            )}
+            <h3 class="card-title">{track.data.title}</h3>
+            {track.data.description && (
+              <p class="card-meta">{track.data.description}</p>
+            )}
+            {track.data.duration && (
+              <span class="music-card__duration">{track.data.duration}</span>
+            )}
+            {track.data.mood.length > 0 && (
+              <div class="music-card__moods">
+                {track.data.mood.map((m) => (
+                  <span class="tag">{m}</span>
+                ))}
+              </div>
+            )}
+            <audio class="music-card__player" controls preload="none">
+              <source src={`/music/${track.data.file}`} type="audio/mpeg" />
+              Your browser does not support audio playback.
+            </audio>
+            <a
+              href={`/music/${track.data.file}`}
+              download
+              class="btn btn--gold music-card__download"
+            >
+              ⬇ Download
+            </a>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .music-intro {
+    text-align: center;
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-xl);
+  }
+
+  .empty-state {
+    text-align: center;
+    color: var(--color-text-muted);
+    font-size: 1.1rem;
+    padding: var(--space-3xl) 0;
+  }
+
+  /* --- Filters --- */
+  .music-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+    justify-content: center;
+    margin-bottom: var(--space-2xl);
+  }
+
+  .filter-btn {
+    font-family: var(--font-heading);
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.4em 1em;
+    border-radius: 999px;
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-card);
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+  }
+
+  .filter-btn:hover,
+  .filter-btn--active {
+    border-color: var(--color-purple);
+    color: var(--color-text-heading);
+    background: rgba(139, 92, 246, 0.15);
+  }
+
+  /* --- Music Card --- */
+  .music-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+
+  .music-card[data-hidden='true'] {
+    display: none;
+  }
+
+  .music-card__art {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: var(--border-radius);
+  }
+
+  .music-card__art--placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-bg-elevated);
+    font-size: 3rem;
+  }
+
+  .music-card__duration {
+    font-family: var(--font-heading);
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+  }
+
+  .music-card__moods {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+  }
+
+  .music-card__player {
+    width: 100%;
+    height: 36px;
+    border-radius: var(--border-radius);
+    margin-top: var(--space-xs);
+  }
+
+  /* Style the audio element for dark theme */
+  .music-card__player::-webkit-media-controls-panel {
+    background: var(--color-bg-elevated);
+  }
+
+  .music-card__download {
+    text-align: center;
+    margin-top: var(--space-xs);
+    font-size: 0.8rem;
+  }
+</style>
+
+<script>
+  const filterBtns = document.querySelectorAll('.filter-btn');
+  const cards = document.querySelectorAll('.music-card');
+
+  filterBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      filterBtns.forEach((b) => b.classList.remove('filter-btn--active'));
+      btn.classList.add('filter-btn--active');
+
+      const mood = (btn as HTMLElement).dataset.mood || '';
+
+      cards.forEach((card) => {
+        const el = card as HTMLElement;
+        if (!mood) {
+          el.dataset.hidden = 'false';
+        } else {
+          const moods = (el.dataset.moods || '').split(',');
+          el.dataset.hidden = String(!moods.includes(mood));
+        }
+      });
+    });
+  });
+
+  // Stop other audio when one plays
+  const players = document.querySelectorAll<HTMLAudioElement>('.music-card__player');
+  players.forEach((player) => {
+    player.addEventListener('play', () => {
+      players.forEach((other) => {
+        if (other !== player) other.pause();
+      });
+    });
+  });
+</script>

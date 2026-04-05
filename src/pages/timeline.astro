@@ -1,0 +1,219 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const events = await getCollection('events');
+const sortedEvents = events.sort((a, b) => a.data.sortOrder - b.data.sortOrder);
+
+const allLocations = await getCollection('locations');
+const locationMap = new Map(allLocations.map((l) => [l.id, l.data.name]));
+
+// Gather filter options
+const eventTypes = [...new Set(events.map((e) => e.data.type))];
+const locationSlugs = [...new Set(events.map((e) => e.data.location).filter(Boolean))] as string[];
+---
+
+<BaseLayout title="Timeline">
+  <div class="page-content">
+    <div class="container">
+      <h1 class="section-title">Timeline of Events</h1>
+
+      {events.length === 0 && (
+        <p class="empty-state">No events have been added yet. Check back soon!</p>
+      )}
+
+      {events.length > 0 && (
+        <div class="timeline-controls">
+          <div class="filter-group">
+            <label class="filter-label">Type:</label>
+            <select id="filter-type" class="filter-select">
+              <option value="">All Types</option>
+              {eventTypes.map((t) => (
+                <option value={t}>{t}</option>
+              ))}
+            </select>
+          </div>
+          <div class="filter-group">
+            <label class="filter-label">Location:</label>
+            <select id="filter-location" class="filter-select">
+              <option value="">All Locations</option>
+              {locationSlugs.map((slug) => (
+                <option value={slug}>{locationMap.get(slug) || slug}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+      )}
+
+      <div class="timeline" id="timeline">
+        {sortedEvents.map((evt) => (
+          <a
+            href={`/events/${evt.id}/`}
+            class="timeline__item"
+            data-type={evt.data.type}
+            data-location={evt.data.location || ''}
+          >
+            <div class="timeline__marker"></div>
+            <div class="timeline__content card">
+              <span class="timeline__date">{evt.data.date}</span>
+              <h3 class="card-title">{evt.data.title}</h3>
+              <p class="card-meta">{evt.data.description}</p>
+              <div class="timeline__tags">
+                <span class={`tag tag--${
+                  evt.data.type === 'battle' ? 'red' :
+                  evt.data.type === 'discovery' ? 'teal' : 'gold'
+                }`}>
+                  {evt.data.type}
+                </span>
+                {evt.data.location && locationMap.get(evt.data.location) && (
+                  <span class="tag tag--teal">
+                    📍 {locationMap.get(evt.data.location)}
+                  </span>
+                )}
+              </div>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .empty-state {
+    text-align: center;
+    color: var(--color-text-muted);
+    font-size: 1.1rem;
+    padding: var(--space-3xl) 0;
+  }
+
+  /* --- Filters --- */
+  .timeline-controls {
+    display: flex;
+    gap: var(--space-lg);
+    margin-bottom: var(--space-2xl);
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .filter-group {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+  }
+
+  .filter-label {
+    font-family: var(--font-heading);
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+  }
+
+  .filter-select {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    color: var(--color-text);
+    padding: 0.4em 0.8em;
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+
+  .filter-select:focus {
+    outline: none;
+    border-color: var(--color-purple);
+    box-shadow: var(--glow-purple);
+  }
+
+  /* --- Timeline --- */
+  .timeline {
+    position: relative;
+    padding-left: 40px;
+  }
+
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(
+      180deg,
+      var(--color-purple),
+      var(--color-teal),
+      var(--color-gold),
+      var(--color-purple)
+    );
+  }
+
+  .timeline__item {
+    position: relative;
+    margin-bottom: var(--space-xl);
+    text-decoration: none;
+    color: inherit;
+    display: block;
+  }
+
+  .timeline__item[data-hidden='true'] {
+    display: none;
+  }
+
+  .timeline__marker {
+    position: absolute;
+    left: -33px;
+    top: var(--space-lg);
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--color-purple);
+    border: 2px solid var(--color-bg-deep);
+    box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+    z-index: 1;
+  }
+
+  .timeline__item:hover .timeline__marker {
+    background: var(--color-gold);
+    box-shadow: 0 0 15px rgba(245, 158, 11, 0.6);
+  }
+
+  .timeline__content {
+    margin-left: var(--space-md);
+  }
+
+  .timeline__date {
+    font-family: var(--font-heading);
+    font-size: 0.85rem;
+    color: var(--color-gold-light);
+    display: block;
+    margin-bottom: var(--space-xs);
+  }
+
+  .timeline__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+    margin-top: var(--space-sm);
+  }
+</style>
+
+<script>
+  const filterType = document.getElementById('filter-type') as HTMLSelectElement | null;
+  const filterLocation = document.getElementById('filter-location') as HTMLSelectElement | null;
+  const items = document.querySelectorAll('.timeline__item');
+
+  function applyFilters() {
+    const type = filterType?.value || '';
+    const location = filterLocation?.value || '';
+
+    items.forEach((item) => {
+      const el = item as HTMLElement;
+      const matchType = !type || el.dataset.type === type;
+      const matchLocation = !location || el.dataset.location === location;
+      el.dataset.hidden = String(!(matchType && matchLocation));
+    });
+  }
+
+  filterType?.addEventListener('change', applyFilters);
+  filterLocation?.addEventListener('change', applyFilters);
+</script>

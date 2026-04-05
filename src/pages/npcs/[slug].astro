@@ -1,0 +1,177 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const npcs = await getCollection('npcs');
+  return npcs.map((npc) => ({
+    params: { slug: npc.id },
+    props: { npc },
+  }));
+}
+
+const { npc } = Astro.props;
+const { Content } = await render(npc);
+
+const allLocations = await getCollection('locations');
+const homeLocation = npc.data.location
+  ? allLocations.find((l) => l.id === npc.data.location)
+  : null;
+
+const allEvents = await getCollection('events');
+const relatedEvents = allEvents
+  .filter((e) => e.data.characters.includes(npc.id))
+  .sort((a, b) => a.data.sortOrder - b.data.sortOrder);
+---
+
+<BaseLayout title={npc.data.name}>
+  <div class="page-content">
+    <div class="container">
+      <a href="/npcs/" class="btn back-btn">← All NPCs</a>
+
+      <article class="npc-detail">
+        <div class="npc-detail__header">
+          {npc.data.image ? (
+            <img src={npc.data.image} alt={npc.data.name} class="npc-detail__portrait" />
+          ) : (
+            <div class="npc-detail__portrait npc-detail__portrait--placeholder">
+              <span>{npc.data.name[0]}</span>
+            </div>
+          )}
+
+          <div class="npc-detail__info">
+            <h1>{npc.data.name}</h1>
+            <div class="npc-detail__stats">
+              {npc.data.race && <span class="tag">{npc.data.race}</span>}
+              {npc.data.role && <span class="tag tag--gold">{npc.data.role}</span>}
+              {npc.data.faction && <span class="tag tag--teal">{npc.data.faction}</span>}
+              <span class={`tag ${
+                npc.data.status === 'alive' ? 'tag--teal' :
+                npc.data.status === 'dead' ? 'tag--red' : ''
+              }`}>
+                {npc.data.status}
+              </span>
+            </div>
+            {homeLocation && (
+              <p class="npc-detail__location">
+                Location: <a href={`/locations/${homeLocation.id}/`}>{homeLocation.data.name}</a>
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div class="prose">
+          <Content />
+        </div>
+
+        {relatedEvents.length > 0 && (
+          <section class="related-section">
+            <h2>Involved in Events</h2>
+            <div class="event-list">
+              {relatedEvents.map((e) => (
+                <a href={`/events/${e.id}/`} class="card event-item">
+                  <span class="event-item__date">{e.data.date}</span>
+                  <h4 class="card-title">{e.data.title}</h4>
+                  <p class="card-meta">{e.data.description}</p>
+                </a>
+              ))}
+            </div>
+          </section>
+        )}
+      </article>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .back-btn {
+    margin-bottom: var(--space-xl);
+    font-size: 0.8rem;
+    display: inline-flex;
+  }
+
+  .npc-detail__header {
+    display: flex;
+    gap: var(--space-xl);
+    align-items: flex-start;
+    margin-bottom: var(--space-2xl);
+    flex-wrap: wrap;
+  }
+
+  .npc-detail__portrait {
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--color-gold);
+    box-shadow: var(--glow-gold);
+    flex-shrink: 0;
+  }
+
+  .npc-detail__portrait--placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-bg-elevated);
+    font-family: var(--font-heading);
+    font-size: 3.5rem;
+    color: var(--color-gold-light);
+  }
+
+  .npc-detail__info h1 {
+    font-size: 2.2rem;
+    margin-bottom: var(--space-md);
+  }
+
+  .npc-detail__stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
+  }
+
+  .npc-detail__location {
+    color: var(--color-text-muted);
+    font-size: 0.95rem;
+  }
+
+  .related-section {
+    margin-top: var(--space-3xl);
+  }
+
+  .related-section h2 {
+    color: var(--color-gold-light);
+    margin-bottom: var(--space-lg);
+  }
+
+  .event-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+
+  .event-item {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    border-left: 3px solid var(--color-teal);
+  }
+
+  .event-item__date {
+    font-family: var(--font-heading);
+    font-size: 0.8rem;
+    color: var(--color-teal-light);
+  }
+
+  @media (max-width: 600px) {
+    .npc-detail__header {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .npc-detail__stats {
+      justify-content: center;
+    }
+  }
+</style>

@@ -1,0 +1,111 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const npcs = await getCollection('npcs');
+
+// Group by faction
+const factions = new Map<string, typeof npcs>();
+for (const npc of npcs) {
+  const faction = npc.data.faction || 'Independent';
+  if (!factions.has(faction)) factions.set(faction, []);
+  factions.get(faction)!.push(npc);
+}
+---
+
+<BaseLayout title="NPCs">
+  <div class="page-content">
+    <div class="container">
+      <h1 class="section-title">Non-Player Characters</h1>
+
+      {npcs.length === 0 && (
+        <p class="empty-state">No NPCs have been added yet. Check back soon!</p>
+      )}
+
+      {[...factions.entries()].map(([faction, members]) => (
+        <section class="faction-group">
+          <h2 class="faction-title">{faction}</h2>
+          <div class="grid grid--3">
+            {members.map((npc) => (
+              <a href={`/npcs/${npc.id}/`} class="card npc-card">
+                {npc.data.image ? (
+                  <img src={npc.data.image} alt={npc.data.name} class="npc-card__portrait" />
+                ) : (
+                  <div class="npc-card__portrait npc-card__portrait--placeholder">
+                    <span>{npc.data.name[0]}</span>
+                  </div>
+                )}
+                <h3 class="card-title">{npc.data.name}</h3>
+                {npc.data.role && <p class="card-meta">{npc.data.role}</p>}
+                {npc.data.race && <p class="npc-card__race">{npc.data.race}</p>}
+                <span class={`tag ${
+                  npc.data.status === 'alive' ? 'tag--teal' :
+                  npc.data.status === 'dead' ? 'tag--red' : ''
+                }`}>
+                  {npc.data.status}
+                </span>
+              </a>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .empty-state {
+    text-align: center;
+    color: var(--color-text-muted);
+    font-size: 1.1rem;
+    padding: var(--space-3xl) 0;
+  }
+
+  .faction-group {
+    margin-bottom: var(--space-3xl);
+  }
+
+  .faction-title {
+    margin-bottom: var(--space-lg);
+    color: var(--color-gold-light);
+    font-size: 1.3rem;
+  }
+
+  .npc-card {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    text-align: center;
+  }
+
+  .npc-card__portrait {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin: 0 auto var(--space-md);
+    border: 2px solid var(--color-border);
+    transition: border-color var(--transition-normal);
+  }
+
+  .npc-card:hover .npc-card__portrait {
+    border-color: var(--color-gold);
+    box-shadow: var(--glow-gold);
+  }
+
+  .npc-card__portrait--placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-bg-elevated);
+    font-family: var(--font-heading);
+    font-size: 1.8rem;
+    color: var(--color-gold-light);
+  }
+
+  .npc-card__race {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-sm);
+  }
+</style>
