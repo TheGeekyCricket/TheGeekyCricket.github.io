@@ -1,50 +1,73 @@
 /* ============================================================
    Geekery D&D Lore Explorer — Global Design System
-   High Fantasy Theme: purples, blues, golds, magical teal
+   Medieval Fantasy Theme: greens, golds, parchment, stone
    ============================================================ */
 
 /* --- Google Fonts Import --- */
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Nunito+Sans:ital,wght@0,300;0,400;0,600;0,700;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=MedievalSharp&family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&display=swap');
 
 /* --- CSS Custom Properties --- */
 :root {
-  /* Primary palette */
-  --color-bg-deep: #0d0a1a;
-  --color-bg: #13102a;
-  --color-bg-card: #1c1838;
-  --color-bg-card-hover: #252047;
-  --color-bg-elevated: #211d3d;
+  /* Primary palette — parchment light theme */
+  --color-bg-deep: #E8DCC8;
+  --color-bg: #F5EEDC;
+  --color-bg-card: #FAF6ED;
+  --color-bg-card-hover: #F0E8D4;
+  --color-bg-elevated: #EDE4CE;
+
+  /* Stone & dark surfaces (nav, footer, contrast) */
+  --color-stone: #3B3228;
+  --color-stone-dark: #2A241E;
+  --color-stone-light: #5C4F3D;
+
+  /* Brand greens (from The Geekery logo) */
+  --color-green-dark: #0D6B58;
+  --color-green: #1A8A6E;
+  --color-green-light: #8FBF9F;
+  --color-green-pale: rgba(13, 107, 88, 0.08);
 
   /* Accent colors */
-  --color-purple: #8b5cf6;
-  --color-purple-light: #a78bfa;
-  --color-purple-dark: #6d28d9;
-  --color-blue: #3b82f6;
-  --color-blue-light: #60a5fa;
+  --color-gold: #D4A853;
+  --color-gold-light: #E4C06A;
+  --color-gold-dark: #B08A3A;
+  --color-crimson: #8B1A1A;
+  --color-crimson-light: #B33A3A;
   --color-teal: #14b8a6;
   --color-teal-light: #2dd4bf;
-  --color-gold: #f59e0b;
-  --color-gold-light: #fbbf24;
-  --color-gold-dark: #d97706;
-  --color-red: #ef4444;
-  --color-green: #22c55e;
+  --color-blue: #3b6d8f;
 
-  /* Text colors */
-  --color-text: #e2e0f0;
-  --color-text-muted: #9895b0;
-  --color-text-heading: #f5f3ff;
-  --color-text-accent: var(--color-gold-light);
+  /* Legacy aliases (for gradual migration) */
+  --color-purple: var(--color-green-dark);
+  --color-purple-light: var(--color-green);
+  --color-purple-dark: var(--color-green-dark);
+  --color-red: var(--color-crimson);
+  --color-gold-light-legacy: var(--color-gold-light);
+
+  /* Text colors — warm browns on parchment */
+  --color-text: #3D3225;
+  --color-text-muted: #6B5D4F;
+  --color-text-heading: #2C2418;
+  --color-text-accent: var(--color-gold-dark);
+  --color-text-on-dark: #EDE4CE;
 
   /* Borders & effects */
-  --color-border: rgba(139, 92, 246, 0.2);
-  --color-border-hover: rgba(139, 92, 246, 0.5);
-  --glow-purple: 0 0 20px rgba(139, 92, 246, 0.3);
-  --glow-gold: 0 0 20px rgba(245, 158, 11, 0.3);
-  --glow-teal: 0 0 20px rgba(20, 184, 166, 0.3);
+  --color-border: rgba(59, 50, 40, 0.2);
+  --color-border-hover: rgba(13, 107, 88, 0.4);
+  --glow-green: 0 0 16px rgba(13, 107, 88, 0.2);
+  --glow-gold: 0 0 16px rgba(212, 168, 83, 0.3);
+  --glow-crimson: 0 0 16px rgba(139, 26, 26, 0.2);
+  /* Legacy aliases */
+  --glow-purple: var(--glow-green);
+  --glow-teal: var(--glow-green);
+
+  /* Parchment inner shadow for depth */
+  --shadow-parchment: inset 0 1px 3px rgba(59, 50, 40, 0.08);
+  --shadow-card: 0 2px 8px rgba(59, 50, 40, 0.1);
 
   /* Typography */
   --font-heading: 'Cinzel', serif;
-  --font-body: 'Nunito Sans', sans-serif;
+  --font-body: 'Crimson Text', serif;
+  --font-decorative: 'MedievalSharp', cursive;
 
   /* Spacing */
   --space-xs: 0.25rem;
@@ -58,8 +81,8 @@
   /* Sizing */
   --max-width: 1200px;
   --nav-height: 70px;
-  --border-radius: 8px;
-  --border-radius-lg: 12px;
+  --border-radius: 6px;
+  --border-radius-lg: 10px;
 
   /* Transitions */
   --transition-fast: 150ms ease;
@@ -84,34 +107,26 @@ html {
 
 body {
   font-family: var(--font-body);
-  font-size: 16px;
-  line-height: 1.7;
+  font-size: 17px;
+  line-height: 1.75;
   color: var(--color-text);
-  background-color: var(--color-bg-deep);
+  background-color: var(--color-bg);
   min-height: 100vh;
   overflow-x: hidden;
 }
 
-/* Subtle background texture */
+/* Parchment paper texture */
 body::before {
   content: '';
   position: fixed;
   inset: 0;
-  background: radial-gradient(
-      ellipse at 20% 50%,
-      rgba(139, 92, 246, 0.06) 0%,
-      transparent 50%
-    ),
-    radial-gradient(
-      ellipse at 80% 20%,
-      rgba(20, 184, 166, 0.04) 0%,
-      transparent 50%
-    ),
-    radial-gradient(
-      ellipse at 50% 80%,
-      rgba(245, 158, 11, 0.03) 0%,
-      transparent 50%
-    );
+  background:
+    /* Subtle grain noise */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E"),
+    /* Warm parchment gradient */
+    radial-gradient(ellipse at 30% 20%, rgba(212, 168, 83, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 80%, rgba(59, 50, 40, 0.04) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(13, 107, 88, 0.02) 0%, transparent 60%);
   pointer-events: none;
   z-index: 0;
 }
@@ -151,13 +166,13 @@ p {
 }
 
 a {
-  color: var(--color-purple-light);
+  color: var(--color-green-dark);
   text-decoration: none;
   transition: color var(--transition-fast);
 }
 
 a:hover {
-  color: var(--color-gold-light);
+  color: var(--color-gold-dark);
 }
 
 img {
@@ -191,13 +206,15 @@ img {
 .section-title::after {
   content: '';
   display: block;
-  width: 80px;
-  height: 3px;
+  width: 120px;
+  height: 2px;
   background: linear-gradient(
     90deg,
-    var(--color-purple),
+    transparent,
+    var(--color-green-dark),
     var(--color-gold),
-    var(--color-teal)
+    var(--color-green-dark),
+    transparent
   );
   margin: var(--space-sm) auto 0;
   border-radius: 2px;
@@ -212,12 +229,22 @@ img {
   transition: all var(--transition-normal);
   position: relative;
   overflow: hidden;
+  box-shadow: var(--shadow-card);
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border: 1px solid rgba(59, 50, 40, 0.06);
+  border-radius: calc(var(--border-radius-lg) - 2px);
+  pointer-events: none;
 }
 
 .card:hover {
   border-color: var(--color-border-hover);
   background: var(--color-bg-card-hover);
-  box-shadow: var(--glow-purple);
+  box-shadow: var(--shadow-card), var(--glow-gold);
   transform: translateY(-2px);
 }
 
@@ -248,27 +275,27 @@ img {
   font-weight: 600;
   padding: 0.2em 0.7em;
   border-radius: 999px;
-  background: rgba(139, 92, 246, 0.15);
-  color: var(--color-purple-light);
-  border: 1px solid rgba(139, 92, 246, 0.25);
+  background: rgba(13, 107, 88, 0.1);
+  color: var(--color-green-dark);
+  border: 1px solid rgba(13, 107, 88, 0.2);
 }
 
 .tag--gold {
-  background: rgba(245, 158, 11, 0.15);
-  color: var(--color-gold-light);
-  border-color: rgba(245, 158, 11, 0.25);
+  background: rgba(212, 168, 83, 0.15);
+  color: var(--color-gold-dark);
+  border-color: rgba(212, 168, 83, 0.3);
 }
 
 .tag--teal {
-  background: rgba(20, 184, 166, 0.15);
-  color: var(--color-teal-light);
+  background: rgba(20, 184, 166, 0.1);
+  color: #0d7d6e;
   border-color: rgba(20, 184, 166, 0.25);
 }
 
 .tag--red {
-  background: rgba(239, 68, 68, 0.15);
-  color: #fca5a5;
-  border-color: rgba(239, 68, 68, 0.25);
+  background: rgba(139, 26, 26, 0.1);
+  color: var(--color-crimson);
+  border-color: rgba(139, 26, 26, 0.2);
 }
 
 /* --- Button --- */
@@ -291,27 +318,27 @@ img {
 }
 
 .btn:hover {
-  border-color: var(--color-purple);
-  box-shadow: var(--glow-purple);
+  border-color: var(--color-green-dark);
+  box-shadow: var(--glow-green);
   color: var(--color-text-heading);
   transform: translateY(-1px);
 }
 
 .btn--primary {
-  background: linear-gradient(135deg, var(--color-purple-dark), var(--color-purple));
-  border-color: var(--color-purple);
+  background: linear-gradient(135deg, var(--color-green-dark), var(--color-green));
+  border-color: var(--color-green-dark);
   color: #fff;
 }
 
 .btn--primary:hover {
-  background: linear-gradient(135deg, var(--color-purple), var(--color-purple-light));
-  box-shadow: var(--glow-purple);
+  background: linear-gradient(135deg, var(--color-green), var(--color-green-light));
+  box-shadow: var(--glow-green);
 }
 
 .btn--gold {
   background: linear-gradient(135deg, var(--color-gold-dark), var(--color-gold));
   border-color: var(--color-gold);
-  color: #1a1700;
+  color: #2C2418;
 }
 
 .btn--gold:hover {
@@ -346,12 +373,12 @@ img {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-purple-dark);
+  background: var(--color-stone-light);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-purple);
+  background: var(--color-stone);
 }
 
 /* --- Responsive --- */
@@ -401,10 +428,10 @@ img {
 }
 
 .prose blockquote {
-  border-left: 3px solid var(--color-purple);
+  border-left: 3px solid var(--color-gold);
   padding: var(--space-md) var(--space-lg);
   margin: var(--space-lg) 0;
-  background: rgba(139, 92, 246, 0.05);
+  background: rgba(212, 168, 83, 0.06);
   border-radius: 0 var(--border-radius) var(--border-radius) 0;
   font-style: italic;
   color: var(--color-text-muted);
@@ -422,9 +449,9 @@ img {
   background: linear-gradient(
     90deg,
     transparent,
-    var(--color-purple),
+    var(--color-green-dark),
     var(--color-gold),
-    var(--color-teal),
+    var(--color-green-dark),
     transparent
   );
   margin: var(--space-2xl) 0;

@@ -123,15 +123,17 @@ const recentEvents = events
     justify-content: center;
     text-align: center;
     padding: calc(var(--nav-height) + var(--space-3xl)) var(--space-lg) var(--space-3xl);
+    background: var(--color-bg-elevated);
+    border-bottom: 2px solid var(--color-border);
+    overflow: hidden;
   }
 
   .hero__overlay {
     position: absolute;
     inset: 0;
     background:
-      radial-gradient(ellipse at center, rgba(139, 92, 246, 0.12) 0%, transparent 70%),
-      radial-gradient(ellipse at 30% 70%, rgba(20, 184, 166, 0.08) 0%, transparent 50%),
-      radial-gradient(ellipse at 70% 30%, rgba(245, 158, 11, 0.06) 0%, transparent 50%);
+      url('/images/raven-crest.svg') center center / 280px no-repeat;
+    opacity: 0.04;
     z-index: 0;
   }
 
@@ -143,10 +145,8 @@ const recentEvents = events
   .hero__title {
     font-size: 3.5rem;
     font-weight: 900;
-    background: linear-gradient(135deg, var(--color-gold-light), var(--color-purple-light), var(--color-teal-light));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: var(--color-text-heading);
+    text-shadow: 0 1px 0 rgba(212, 168, 83, 0.2);
     margin-bottom: var(--space-md);
   }
 
@@ -178,8 +178,11 @@ const recentEvents = events
     gap: var(--space-2xl);
     flex-wrap: wrap;
     margin-bottom: var(--space-3xl);
-    padding: var(--space-xl) 0;
-    border-bottom: 1px solid var(--color-border);
+    padding: var(--space-xl) var(--space-lg);
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-parchment);
   }
 
   .stat {
@@ -191,12 +194,16 @@ const recentEvents = events
     font-family: var(--font-heading);
     font-size: 2rem;
     font-weight: 700;
-    color: var(--color-gold-light);
+    color: var(--color-green-dark);
   }
 
   .stat__label {
     font-size: 0.85rem;
     color: var(--color-text-muted);
+    font-family: var(--font-heading);
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
   }
 
   /* --- Nav Cards --- */
@@ -228,7 +235,7 @@ const recentEvents = events
   .event-date {
     font-family: var(--font-heading);
     font-size: 0.8rem;
-    color: var(--color-gold-light);
+    color: var(--color-gold-dark);
     display: block;
     margin-bottom: var(--space-xs);
   }

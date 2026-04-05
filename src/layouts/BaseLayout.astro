@@ -63,6 +63,7 @@ const navLinks = [
 
     <footer class="footer">
       <div class="container footer__inner">
+        <img src="/images/raven-crest.svg" alt="" class="footer__crest" aria-hidden="true" />
         <p class="footer__text">
           &copy; {new Date().getFullYear()} The Geekery — All adventures are linked.
         </p>
@@ -102,10 +103,10 @@ const navLinks = [
     left: 0;
     right: 0;
     height: var(--nav-height);
-    background: rgba(13, 10, 26, 0.85);
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--color-border);
+    background: var(--color-stone-dark);
+    border-bottom: 2px solid var(--color-gold-dark);
     z-index: 1000;
+    box-shadow: 0 2px 12px rgba(42, 36, 30, 0.4);
   }
 
   .nav__inner {
@@ -122,7 +123,7 @@ const navLinks = [
     font-family: var(--font-heading);
     font-size: 1.25rem;
     font-weight: 700;
-    color: var(--color-text-heading);
+    color: var(--color-text-on-dark);
     text-decoration: none;
   }
 
@@ -136,16 +137,15 @@ const navLinks = [
   }
 
   .nav__logo-title {
-    font-family: var(--font-heading);
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--color-text-heading);
+    font-family: var(--font-decorative);
+    font-size: 1.15rem;
+    color: var(--color-gold-light);
     text-decoration: none;
     transition: color var(--transition-fast);
   }
 
   .nav__logo-title:hover {
-    color: var(--color-gold-light);
+    color: var(--color-gold);
   }
 
   .nav__links {
@@ -161,20 +161,23 @@ const navLinks = [
     font-size: 0.85rem;
     font-weight: 600;
     letter-spacing: 0.02em;
-    color: var(--color-text-muted);
+    color: var(--color-text-on-dark);
     text-decoration: none;
     border-radius: var(--border-radius);
     transition: all var(--transition-fast);
+    opacity: 0.75;
   }
 
   .nav__link:hover {
-    color: var(--color-text-heading);
-    background: rgba(139, 92, 246, 0.1);
+    color: var(--color-gold-light);
+    background: rgba(212, 168, 83, 0.1);
+    opacity: 1;
   }
 
   .nav__link--active {
     color: var(--color-gold-light);
-    background: rgba(245, 158, 11, 0.1);
+    background: rgba(212, 168, 83, 0.15);
+    opacity: 1;
   }
 
   /* Hamburger */
@@ -192,7 +195,7 @@ const navLinks = [
     display: block;
     width: 24px;
     height: 2px;
-    background: var(--color-text);
+    background: var(--color-text-on-dark);
     border-radius: 2px;
     transition: all var(--transition-fast);
   }
@@ -201,17 +204,31 @@ const navLinks = [
   .footer {
     position: relative;
     z-index: 1;
-    border-top: 1px solid var(--color-border);
+    background: var(--color-stone-dark);
+    border-top: 2px solid var(--color-gold-dark);
     padding: var(--space-xl) 0;
   }
 
   .footer__inner {
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-md);
+  }
+
+  .footer__crest {
+    width: 48px;
+    height: auto;
+    opacity: 0.4;
+    color: var(--color-gold);
+    filter: sepia(0.3);
   }
 
   .footer__text {
     font-size: 0.85rem;
-    color: var(--color-text-muted);
+    color: var(--color-text-on-dark);
+    opacity: 0.6;
     margin: 0;
   }
 
@@ -227,10 +244,9 @@ const navLinks = [
       left: 0;
       right: 0;
       flex-direction: column;
-      background: rgba(13, 10, 26, 0.95);
-      backdrop-filter: blur(12px);
+      background: var(--color-stone-dark);
       padding: var(--space-md);
-      border-bottom: 1px solid var(--color-border);
+      border-bottom: 2px solid var(--color-gold-dark);
       transform: translateY(-100%);
       opacity: 0;
       pointer-events: none;

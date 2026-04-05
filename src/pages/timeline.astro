@@ -121,8 +121,8 @@ const locationSlugs = [...new Set(events.map((e) => e.data.location).filter(Bool
 
   .filter-select:focus {
     outline: none;
-    border-color: var(--color-purple);
-    box-shadow: var(--glow-purple);
+    border-color: var(--color-green-dark);
+    box-shadow: var(--glow-green);
   }
 
   /* --- Timeline --- */
@@ -140,10 +140,10 @@ const locationSlugs = [...new Set(events.map((e) => e.data.location).filter(Bool
     width: 2px;
     background: linear-gradient(
       180deg,
-      var(--color-purple),
-      var(--color-teal),
+      var(--color-green-dark),
       var(--color-gold),
-      var(--color-purple)
+      var(--color-green),
+      var(--color-green-dark)
     );
   }
 
@@ -166,9 +166,9 @@ const locationSlugs = [...new Set(events.map((e) => e.data.location).filter(Bool
     width: 14px;
     height: 14px;
     border-radius: 50%;
-    background: var(--color-purple);
+    background: var(--color-green-dark);
     border: 2px solid var(--color-bg-deep);
-    box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+    box-shadow: 0 0 8px rgba(13, 107, 88, 0.4);
     z-index: 1;
   }
 
@@ -184,7 +184,7 @@ const locationSlugs = [...new Set(events.map((e) => e.data.location).filter(Bool
   .timeline__date {
     font-family: var(--font-heading);
     font-size: 0.85rem;
-    color: var(--color-gold-light);
+    color: var(--color-gold-dark);
     display: block;
     margin-bottom: var(--space-xs);
   }
