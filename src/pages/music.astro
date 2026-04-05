@@ -131,6 +131,21 @@ const allMoods = [...new Set(tracks.flatMap((t) => t.data.mood))].sort();
     aspect-ratio: 1;
     object-fit: cover;
     border-radius: var(--border-radius);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .music-card:hover .music-card__art::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      120deg,
+      transparent 30%,
+      rgba(255, 255, 255, 0.15) 50%,
+      transparent 70%
+    );
+    animation: shimmer 1.5s ease;
   }
 
   .music-card__art--placeholder {

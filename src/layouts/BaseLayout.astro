@@ -29,6 +29,7 @@ const navLinks = [
     <title>{title} | The Geekery Lore Explorer</title>
   </head>
   <body>
+    <a href="#main-content" class="skip-to-content">Skip to content</a>
     <nav class="nav" id="main-nav">
       <div class="nav__inner container">
         <a href="https://www.thegeekery.com" class="nav__logo" target="_blank" rel="noopener noreferrer">
@@ -57,7 +58,7 @@ const navLinks = [
       </div>
     </nav>
 
-    <main>
+    <main id="main-content">
       <slot />
     </main>
 
@@ -107,6 +108,23 @@ const navLinks = [
     border-bottom: 2px solid var(--color-gold-dark);
     z-index: 1000;
     box-shadow: 0 2px 12px rgba(42, 36, 30, 0.4);
+  }
+
+  .nav::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: repeating-linear-gradient(
+      90deg,
+      var(--color-gold-dark) 0px,
+      var(--color-gold-dark) 8px,
+      transparent 8px,
+      transparent 16px
+    );
+    opacity: 0.5;
   }
 
   .nav__inner {
@@ -166,6 +184,25 @@ const navLinks = [
     border-radius: var(--border-radius);
     transition: all var(--transition-fast);
     opacity: 0.75;
+    position: relative;
+  }
+
+  .nav__link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: var(--color-gold-light);
+    transition: all var(--transition-normal);
+    transform: translateX(-50%);
+    border-radius: 1px;
+  }
+
+  .nav__link:hover::after,
+  .nav__link--active::after {
+    width: 60%;
   }
 
   .nav__link:hover {
@@ -209,6 +246,23 @@ const navLinks = [
     padding: var(--space-xl) 0;
   }
 
+  .footer::before {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: repeating-linear-gradient(
+      90deg,
+      var(--color-gold-dark) 0px,
+      var(--color-gold-dark) 8px,
+      transparent 8px,
+      transparent 16px
+    );
+    opacity: 0.5;
+  }
+
   .footer__inner {
     text-align: center;
     display: flex;
@@ -220,7 +274,7 @@ const navLinks = [
   .footer__crest {
     width: 48px;
     height: auto;
-    opacity: 0.4;
+    opacity: 0.6;
     color: var(--color-gold);
     filter: sepia(0.3);
   }
@@ -228,7 +282,7 @@ const navLinks = [
   .footer__text {
     font-size: 0.85rem;
     color: var(--color-text-on-dark);
-    opacity: 0.6;
+    opacity: 0.8;
     margin: 0;
   }
 

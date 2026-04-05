@@ -175,6 +175,7 @@ const locationSlugs = [...new Set(events.map((e) => e.data.location).filter(Bool
   .timeline__item:hover .timeline__marker {
     background: var(--color-gold);
     box-shadow: 0 0 15px rgba(245, 158, 11, 0.6);
+    animation: pulse 1s ease infinite;
   }
 
   .timeline__content {
@@ -182,7 +183,7 @@ const locationSlugs = [...new Set(events.map((e) => e.data.location).filter(Bool
   }
 
   .timeline__date {
-    font-family: var(--font-heading);
+    font-family: var(--font-decorative);
     font-size: 0.85rem;
     color: var(--color-gold-dark);
     display: block;

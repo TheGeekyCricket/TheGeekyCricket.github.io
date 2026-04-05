@@ -149,13 +149,14 @@ const statusGroups = {
     border-radius: 50%;
     object-fit: cover;
     margin: 0 auto var(--space-md);
-    border: 2px solid var(--color-border);
-    transition: border-color var(--transition-normal);
+    border: 3px solid var(--color-green-dark);
+    box-shadow: 0 0 0 3px var(--color-bg-card), 0 0 0 5px var(--color-gold-dark), inset 0 2px 6px rgba(0,0,0,0.15);
+    transition: all var(--transition-normal);
   }
 
   .char-card:hover .char-card__portrait {
-    border-color: var(--color-green-dark);
-    box-shadow: var(--glow-green);
+    border-color: var(--color-gold);
+    box-shadow: 0 0 0 3px var(--color-bg-card), 0 0 0 5px var(--color-green-dark), var(--glow-green), inset 0 2px 6px rgba(0,0,0,0.15);
   }
 
   .char-card__portrait--placeholder {

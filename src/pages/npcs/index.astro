@@ -84,13 +84,14 @@ for (const npc of npcs) {
     border-radius: 50%;
     object-fit: cover;
     margin: 0 auto var(--space-md);
-    border: 2px solid var(--color-border);
-    transition: border-color var(--transition-normal);
+    border: 3px solid var(--color-gold);
+    box-shadow: 0 0 0 3px var(--color-bg-card), 0 0 0 5px var(--color-stone-light), inset 0 2px 6px rgba(0,0,0,0.15);
+    transition: all var(--transition-normal);
   }
 
   .npc-card:hover .npc-card__portrait {
-    border-color: var(--color-gold);
-    box-shadow: var(--glow-gold);
+    border-color: var(--color-gold-light);
+    box-shadow: 0 0 0 3px var(--color-bg-card), 0 0 0 5px var(--color-gold-dark), var(--glow-gold), inset 0 2px 6px rgba(0,0,0,0.15);
   }
 
   .npc-card__portrait--placeholder {
