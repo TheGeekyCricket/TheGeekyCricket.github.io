@@ -10,7 +10,7 @@ tags: [fortress, mountain, ancient, neutral ground]
 
 ## History
 
-The Crystalpeak Citadel was carved from living crystal and stone by the Deepforge Dwarves over a thousand years ago. During the Age of Fracturing, when the races of the world were at war, the citadel served as the site of the Grand Concordance — the peace treaty that ended centuries of conflict.
+The Crystalpeak Citadel was carved from living crystal and stone by the Deepforge Dwarves over a thousand years ago. During the Age of Fracturing, when the races of the world were at war, the citadel served as the site of the Grand Concordance ??? the peace treaty that ended centuries of conflict.
 
 ## Notable Features
 
@@ -26,3 +26,8 @@ The original dwarven forge still burns with elemental fire. Master smiths travel
 ## Current Status
 
 The citadel is currently home to the **Council of the Concordance**, representatives from each major faction who meet quarterly to discuss matters affecting the entire world.
+
+
+
+
+

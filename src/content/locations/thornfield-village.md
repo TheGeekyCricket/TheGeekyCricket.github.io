@@ -10,7 +10,7 @@ tags: [village, starting area, safe haven]
 
 ## History
 
-Thornfield Village was founded over three hundred years ago by a band of weary travelers seeking refuge from the Shadowblight Wars. The village elder, Myranda Thornfield, planted the first seeds of what would become the Great Thornwood — a massive oak tree that still stands in the village center today.
+Thornfield Village was founded over three hundred years ago by a band of weary travelers seeking refuge from the Shadowblight Wars. The village elder, Myranda Thornfield, planted the first seeds of what would become the Great Thornwood ??? a massive oak tree that still stands in the village center today.
 
 ## Notable Features
 
@@ -26,3 +26,8 @@ A modest stone building where young heroes receive their first quests. The notic
 ## Current Events
 
 The village has recently been troubled by strange noises coming from the Whispering Caves to the north. Several livestock have gone missing, and the village council has put out a call for brave adventurers to investigate.
+
+
+
+
+

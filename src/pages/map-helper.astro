@@ -1,81 +1,106 @@
----
+﻿---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const allLocations = await getCollection('locations');
+const locationsForClient = allLocations.map((loc) => ({
+  id: loc.id,
+  name: loc.data.name,
+  mapX: loc.data.mapX,
+  mapY: loc.data.mapY,
+}));
 ---
 
-<BaseLayout title="Map Coordinate Picker">
+<BaseLayout title="Map Location Marker">
   <div class="page-content">
-    <div class="container">
-      <h1 class="section-title">Map Coordinate Picker</h1>
+    <div class="container container--wide">
+      <h1 class="section-title">Map Location Marker</h1>
       <p class="picker-intro">
-        Click anywhere on the map to get the <code>mapX</code> and <code>mapY</code> values
-        for placing a location hotspot. Copy the values into your location's markdown file.
+        Select a location, then click on the map to update its coordinates.
       </p>
 
-      <div class="picker-output" id="picker-output">
-        <div class="coord-display">
-          <span class="coord-label">mapX:</span>
-          <span class="coord-value" id="coord-x">—</span>
+      <div class="marker-controls">
+        <div class="control-group">
+          <label for="location-select" class="control-label">Location:</label>
+          <select id="location-select" class="control-select">
+            <option value="">— Select a location —</option>
+            {locationsForClient.map((loc) => (
+              <option value={loc.id}>{loc.name}</option>
+            ))}
+          </select>
         </div>
+
         <div class="coord-display">
-          <span class="coord-label">mapY:</span>
-          <span class="coord-value" id="coord-y">—</span>
+          <div class="coord-item">
+            <span class="coord-label">mapX:</span>
+            <span class="coord-value" id="coord-x">—</span>
+          </div>
+          <div class="coord-item">
+            <span class="coord-label">mapY:</span>
+            <span class="coord-value" id="coord-y">—</span>
+          </div>
         </div>
-        <button class="btn btn--primary" id="copy-btn" disabled>📋 Copy to Clipboard</button>
+
+        <button class="btn btn--primary" id="copy-btn" disabled>📋 Copy Coords</button>
+        <button class="btn btn--secondary" id="debug-btn" style="margin-left: 1rem;">🔍 Debug</button>
+        <span id="pin-status" style="margin-left: 1rem; font-family: monospace; color: var(--color-green-dark);"></span>
+      </div>
+
+      <div class="zoom-controls">
+        <button class="btn btn--secondary zoom-btn" id="zoom-out">➖ Zoom Out</button>
+        <span class="zoom-level" id="zoom-level">100%</span>
+        <button class="btn btn--secondary zoom-btn" id="zoom-in">➕ Zoom In</button>
+        <button class="btn btn--secondary zoom-btn" id="zoom-fit">🔲 Fit</button>
       </div>
 
       <div class="picker-map" id="picker-map">
-        <img
-          src="/images/world-map.png"
-          alt="World Map"
-          class="picker-map__image"
-          id="map-image"
-          draggable="false"
-        />
-        <div class="picker-map__crosshair" id="crosshair"></div>
-        <div class="picker-map__pin-list" id="pin-list"></div>
+        <div class="picker-map__canvas" id="map-canvas">
+          <img
+            src="/images/world-map.png.png"
+            alt="World Map"
+            class="picker-map__image"
+            id="map-image"
+            draggable="false"
+          />
+          <div class="picker-map__pin-list" id="pin-list"></div>
+          <div class="click-marker" id="click-marker"></div>
+        </div>
       </div>
 
-      <div class="pins-log">
-        <h3>Saved Pins</h3>
-        <p class="picker-intro">Click the map to add pins. Double-click a pin to remove it.</p>
-        <table class="pins-table" id="pins-table">
+      <div class="locations-table">
+        <h3>Locations</h3>
+        <table id="locations-table" class="table">
           <thead>
             <tr>
-              <th>#</th>
+              <th>Name</th>
               <th>mapX</th>
               <th>mapY</th>
-              <th>Actions</th>
             </tr>
           </thead>
-          <tbody id="pins-body"></tbody>
+          <tbody id="locations-body"></tbody>
         </table>
-        <button class="btn" id="copy-all-btn" style="margin-top: var(--space-md);">📋 Copy All Pins</button>
       </div>
     </div>
   </div>
 </BaseLayout>
 
-<style>
+<style is:global>
+  .container--wide {
+    max-width: none;
+    width: 100%;
+  }
+
   .picker-intro {
     text-align: center;
     color: var(--color-text-muted);
     margin-bottom: var(--space-lg);
   }
 
-  .picker-intro code {
-    background: var(--color-bg-elevated);
-    padding: 0.15em 0.4em;
-    border-radius: 4px;
-    font-size: 0.9em;
-    color: var(--color-gold-dark);
-  }
-
-  /* --- Output Display --- */
-  .picker-output {
+  .marker-controls {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: var(--space-xl);
+    gap: var(--space-lg);
     margin-bottom: var(--space-xl);
     padding: var(--space-lg);
     background: var(--color-bg-card);
@@ -84,255 +109,431 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     flex-wrap: wrap;
   }
 
-  .coord-display {
+  .control-group {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     gap: var(--space-sm);
   }
 
-  .coord-label {
+  .control-label {
     font-family: var(--font-heading);
     font-size: 0.9rem;
     color: var(--color-text-muted);
   }
 
-  .coord-value {
-    font-family: monospace;
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: var(--color-green-dark);
-    min-width: 60px;
+  .control-select {
+    background: var(--color-bg-elevated);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    color: var(--color-text);
+    padding: 0.5em 0.75em;
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    cursor: pointer;
+    min-width: 200px;
   }
 
-  /* --- Map Container --- */
+  .control-select:focus {
+    outline: none;
+    border-color: var(--color-green-dark);
+    box-shadow: var(--glow-green);
+  }
+
+  .coord-display {
+    display: flex;
+    gap: var(--space-md);
+  }
+
+  .coord-item {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-xs);
+  }
+
+  .coord-label {
+    font-family: var(--font-heading);
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+  }
+
+  .coord-value {
+    font-family: monospace;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--color-green-dark);
+    min-width: 45px;
+  }
+
+  .zoom-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-md);
+    margin-bottom: var(--space-md);
+  }
+
+  .zoom-level {
+    font-family: monospace;
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--color-green-dark);
+    min-width: 60px;
+    text-align: center;
+  }
+
   .picker-map {
     position: relative;
+    width: 100vw;
+    margin-left: calc(-50vw + 50%);
+    margin-right: calc(-50vw + 50%);
+    margin-bottom: var(--space-2xl);
+    max-width: none;
     border: 2px solid var(--color-border);
     border-radius: var(--border-radius-lg);
-    overflow: hidden;
+    overflow: auto;
     cursor: crosshair;
-    margin-bottom: var(--space-2xl);
+    height: clamp(700px, 85vh, 1400px);
+    background: var(--color-bg-elevated);
+  }
+
+  .picker-map__canvas {
+    position: relative;
+    display: inline-block;
+    line-height: 0;
   }
 
   .picker-map__image {
-    width: 100%;
     display: block;
     user-select: none;
     pointer-events: none;
+    max-width: none;
+    max-height: none;
   }
 
-  .picker-map__crosshair {
+  .click-marker {
     display: none;
     position: absolute;
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
-    background: var(--color-gold);
-    border: 3px solid #fff;
-    box-shadow: 0 0 12px rgba(245, 158, 11, 0.7), 0 0 24px rgba(245, 158, 11, 0.3);
+    border: 3px solid #ff0080;
+    background: rgba(255, 0, 128, 0.3);
     transform: translate(-50%, -50%);
     pointer-events: none;
-    z-index: 10;
-    transition: left 0.05s, top 0.05s;
+    z-index: 20;
+    box-shadow: 0 0 0 1px white, 0 0 12px rgba(255, 0, 128, 0.8);
   }
 
-  .picker-map__crosshair--visible {
+  .click-marker::before,
+  .click-marker::after {
+    content: '';
+    position: absolute;
+    background: #ff0080;
+  }
+
+  .click-marker::before {
+    width: 2px;
+    height: 32px;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .click-marker::after {
+    width: 32px;
+    height: 2px;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .click-marker--visible {
     display: block;
   }
 
-  /* Saved pins on map */
+
+
+  @media (max-width: 700px) {
+    .picker-map {
+      width: 100vw;
+      margin-left: calc(-50vw + 50%);
+      margin-right: calc(-50vw + 50%);
+      height: clamp(600px, 85vh, 1000px);
+    }
+  }
+
   .saved-pin {
     position: absolute;
     width: 14px;
     height: 14px;
     border-radius: 50%;
-    background: var(--color-green-dark);
-    border: 2px solid var(--color-green-light);
-    box-shadow: 0 0 8px rgba(13, 107, 88, 0.4);
+    background: #00ff66;
+    border: 2px solid #003311;
     transform: translate(-50%, -50%);
-    cursor: pointer;
-    z-index: 5;
-    transition: all var(--transition-fast);
-  }
-
-  .saved-pin:hover {
-    background: var(--color-red);
-    box-shadow: 0 0 12px rgba(239, 68, 68, 0.6);
-    transform: translate(-50%, -50%) scale(1.3);
+    pointer-events: none;
+    z-index: 30;
+    box-shadow: 0 0 0 1px white, 0 0 8px rgba(0, 255, 102, 0.9);
   }
 
   .saved-pin__label {
     position: absolute;
-    top: -22px;
+    top: 12px;
     left: 50%;
     transform: translateX(-50%);
     font-family: var(--font-heading);
-    font-size: 0.65rem;
-    color: var(--color-text-heading);
-    background: rgba(59, 50, 40, 0.9);
-    padding: 1px 6px;
+    font-size: 0.7rem;
+    color: white;
+    background: rgba(0, 0, 0, 0.85);
+    padding: 2px 6px;
     border-radius: 3px;
     white-space: nowrap;
     pointer-events: none;
   }
 
-  /* --- Pins Log --- */
-  .pins-log {
-    margin-bottom: var(--space-2xl);
+  .locations-table {
+    margin-top: var(--space-2xl);
   }
 
-  .pins-log h3 {
-    margin-bottom: var(--space-md);
+  .locations-table h3 {
     color: var(--color-gold-dark);
+    margin-bottom: var(--space-md);
   }
 
-  .pins-table {
+  .table {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: var(--space-md);
-  }
-
-  .pins-table th,
-  .pins-table td {
-    padding: var(--space-sm) var(--space-md);
-    border: 1px solid var(--color-border);
-    text-align: center;
     font-size: 0.9rem;
   }
 
-  .pins-table th {
+  .table th,
+  .table td {
+    padding: var(--space-sm) var(--space-md);
+    border: 1px solid var(--color-border);
+    text-align: left;
+  }
+
+  .table th {
     background: var(--color-bg-elevated);
     font-family: var(--font-heading);
     font-weight: 600;
     color: var(--color-text-heading);
   }
 
-  .pins-table td {
+  .table td {
     font-family: monospace;
     color: var(--color-text);
   }
-
-  .pin-remove-btn {
-    background: none;
-    border: 1px solid var(--color-border);
-    color: var(--color-red);
-    padding: 0.2em 0.6em;
-    border-radius: var(--border-radius);
-    cursor: pointer;
-    font-size: 0.8rem;
-    transition: all var(--transition-fast);
-  }
-
-  .pin-remove-btn:hover {
-    background: rgba(239, 68, 68, 0.15);
-    border-color: var(--color-red);
-  }
 </style>
 
-<script>
-  const mapContainer = document.getElementById('picker-map')!;
-  const mapImage = document.getElementById('map-image')! as HTMLImageElement;
-  const crosshair = document.getElementById('crosshair')!;
-  const coordX = document.getElementById('coord-x')!;
-  const coordY = document.getElementById('coord-y')!;
-  const copyBtn = document.getElementById('copy-btn')! as HTMLButtonElement;
-  const copyAllBtn = document.getElementById('copy-all-btn')!;
-  const pinList = document.getElementById('pin-list')!;
-  const pinsBody = document.getElementById('pins-body')!;
+<script define:vars={{ locationsForClient }}>
+  const mapContainer = document.getElementById('picker-map');
+  const mapCanvas = document.getElementById('map-canvas');
+  const mapImage = document.getElementById('map-image');
+  const clickMarker = document.getElementById('click-marker');
+  const coordX = document.getElementById('coord-x');
+  const coordY = document.getElementById('coord-y');
+  const locationSelect = document.getElementById('location-select');
+  const copyBtn = document.getElementById('copy-btn');
+  const debugBtn = document.getElementById('debug-btn');
+  const zoomInBtn = document.getElementById('zoom-in');
+  const zoomOutBtn = document.getElementById('zoom-out');
+  const zoomFitBtn = document.getElementById('zoom-fit');
+  const zoomLevelEl = document.getElementById('zoom-level');
+  const pinList = document.getElementById('pin-list');
+  const locationsBody = document.getElementById('locations-body');
+  const pinStatus = document.getElementById('pin-status');
 
+  const locationMap = new Map(locationsForClient.map((loc) => [loc.id, loc]));
+  let selectedLocationId = '';
   let lastX = 0;
   let lastY = 0;
-  interface Pin { x: number; y: number; }
-  const pins: Pin[] = [];
+  let currentScale = 1;
 
-  function getPercentCoords(e: MouseEvent): { x: number; y: number } {
-    const rect = mapContainer.getBoundingClientRect();
-    const x = Math.round(((e.clientX - rect.left) / rect.width) * 1000) / 10;
-    const y = Math.round(((e.clientY - rect.top) / rect.height) * 1000) / 10;
+  function applyScale() {
+    if (!mapImage.naturalWidth) return;
+    mapImage.style.width = `${mapImage.naturalWidth * currentScale}px`;
+    mapImage.style.height = `${mapImage.naturalHeight * currentScale}px`;
+    zoomLevelEl.textContent = `${Math.round(currentScale * 100)}%`;
+    renderPins();
+  }
+
+  function fitToContainer() {
+    if (!mapImage.naturalWidth) return;
+    const cw = mapContainer.clientWidth;
+    const ch = mapContainer.clientHeight;
+    const sx = cw / mapImage.naturalWidth;
+    const sy = ch / mapImage.naturalHeight;
+    currentScale = Math.min(sx, sy);
+    applyScale();
+  }
+
+  function getPercentCoords(e) {
+    const imgRect = mapImage.getBoundingClientRect();
+    const withinX = e.clientX - imgRect.left;
+    const withinY = e.clientY - imgRect.top;
+
+    if (withinX < 0 || withinY < 0 || withinX > imgRect.width || withinY > imgRect.height) {
+      return null;
+    }
+
+    const x = Math.round((withinX / imgRect.width) * 1000) / 10;
+    const y = Math.round((withinY / imgRect.height) * 1000) / 10;
+    return { x, y };
+  }
+
+  function toPixelPoint(mapX, mapY) {
+    const w = mapImage.naturalWidth * currentScale;
+    const h = mapImage.naturalHeight * currentScale;
     return {
-      x: Math.max(0, Math.min(100, x)),
-      y: Math.max(0, Math.min(100, y)),
+      left: (mapX / 100) * w,
+      top: (mapY / 100) * h,
     };
   }
 
-  mapContainer.addEventListener('mousemove', (e) => {
-    const { x, y } = getPercentCoords(e);
-    crosshair.style.left = `${x}%`;
-    crosshair.style.top = `${y}%`;
-    crosshair.classList.add('picker-map__crosshair--visible');
-    coordX.textContent = x.toFixed(1);
-    coordY.textContent = y.toFixed(1);
+  function renderPins() {
+    pinList.innerHTML = '';
+    const nw = mapImage.naturalWidth;
+    const nh = mapImage.naturalHeight;
+    if (pinStatus) {
+      pinStatus.textContent = `pins: ${locationsForClient.length} | natural: ${nw}×${nh} | scale: ${currentScale.toFixed(2)}`;
+    }
+    if (!nw || !nh) {
+      console.warn('renderPins skipped — image not loaded yet');
+      return;
+    }
+    locationsForClient.forEach((loc) => {
+      const point = toPixelPoint(loc.mapX, loc.mapY);
+      const el = document.createElement('div');
+      el.className = 'saved-pin';
+      el.style.left = `${point.left}px`;
+      el.style.top = `${point.top}px`;
+      el.innerHTML = `<span class="saved-pin__label">${loc.name}</span>`;
+      pinList.appendChild(el);
+    });
+  }
+
+  function renderTable() {
+    locationsBody.innerHTML = '';
+    locationsForClient.forEach((loc) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${loc.name}</td>
+        <td>${loc.mapX}</td>
+        <td>${loc.mapY}</td>
+      `;
+      locationsBody.appendChild(tr);
+    });
+  }
+
+  locationSelect.addEventListener('change', (e) => {
+    selectedLocationId = e.target.value;
+    copyBtn.disabled = !selectedLocationId;
+    if (selectedLocationId) {
+      const loc = locationMap.get(selectedLocationId);
+      if (loc) {
+        coordX.textContent = loc.mapX.toFixed(1);
+        coordY.textContent = loc.mapY.toFixed(1);
+        lastX = loc.mapX;
+        lastY = loc.mapY;
+      }
+    }
   });
 
-  mapContainer.addEventListener('mouseleave', () => {
-    crosshair.classList.remove('picker-map__crosshair--visible');
-  });
+
 
   mapContainer.addEventListener('click', (e) => {
-    if ((e.target as HTMLElement).classList.contains('saved-pin')) return;
-    const { x, y } = getPercentCoords(e);
-    lastX = x;
-    lastY = y;
-    coordX.textContent = x.toFixed(1);
-    coordY.textContent = y.toFixed(1);
-    copyBtn.disabled = false;
+    if (!selectedLocationId) {
+      alert('Please select a location first');
+      return;
+    }
 
-    // Add pin
-    pins.push({ x, y });
-    renderPins();
+    const coords = getPercentCoords(e);
+    if (!coords) return;
+
+    const imgRect = mapImage.getBoundingClientRect();
+    const canvasRect = mapCanvas.getBoundingClientRect();
+    const markerLeft = e.clientX - canvasRect.left;
+    const markerTop = e.clientY - canvasRect.top;
+    clickMarker.style.left = `${markerLeft}px`;
+    clickMarker.style.top = `${markerTop}px`;
+    clickMarker.classList.add('click-marker--visible');
+
+    console.log('=== CLICK ===');
+    console.log('Click at:', { x: e.clientX, y: e.clientY });
+    console.log('Image rect:', { left: imgRect.left, top: imgRect.top, w: imgRect.width, h: imgRect.height });
+    console.log('Within image:', { x: e.clientX - imgRect.left, y: e.clientY - imgRect.top });
+    console.log('Calculated mapX/Y:', { x: coords.x, y: coords.y });
+
+    lastX = coords.x;
+    lastY = coords.y;
+    coordX.textContent = coords.x.toFixed(1);
+    coordY.textContent = coords.y.toFixed(1);
+
+    const loc = locationMap.get(selectedLocationId);
+    if (loc) {
+      loc.mapX = coords.x;
+      loc.mapY = coords.y;
+      renderPins();
+      renderTable();
+    }
   });
 
   copyBtn.addEventListener('click', () => {
     const text = `mapX: ${lastX}\nmapY: ${lastY}`;
     navigator.clipboard.writeText(text).then(() => {
       copyBtn.textContent = '✅ Copied!';
-      setTimeout(() => { copyBtn.textContent = '📋 Copy to Clipboard'; }, 1500);
+      setTimeout(() => { copyBtn.textContent = '📋 Copy Coords'; }, 1500);
     });
   });
 
-  copyAllBtn.addEventListener('click', () => {
-    if (pins.length === 0) return;
-    const lines = pins.map((p, i) => `Pin ${i + 1}: mapX: ${p.x}, mapY: ${p.y}`).join('\n');
-    navigator.clipboard.writeText(lines).then(() => {
-      copyAllBtn.textContent = '✅ Copied All!';
-      setTimeout(() => { copyAllBtn.textContent = '📋 Copy All Pins'; }, 1500);
-    });
+  debugBtn.addEventListener('click', () => {
+    const imgRect = mapImage.getBoundingClientRect();
+    console.log('=== DEBUG ===');
+    console.log('Image natural:', { w: mapImage.naturalWidth, h: mapImage.naturalHeight });
+    console.log('Image displayed rect:', { left: imgRect.left, top: imgRect.top, width: imgRect.width, height: imgRect.height });
+    console.log('Current scale:', currentScale);
+    alert('Debug info logged to console (F12).');
   });
 
-  function removePin(index: number) {
-    pins.splice(index, 1);
+  zoomInBtn.addEventListener('click', () => {
+    currentScale = Math.min(currentScale * 1.25, 5);
+    applyScale();
+  });
+
+  zoomOutBtn.addEventListener('click', () => {
+    currentScale = Math.max(currentScale / 1.25, 0.1);
+    applyScale();
+  });
+
+  zoomFitBtn.addEventListener('click', () => {
+    fitToContainer();
+  });
+
+  function initialize() {
+    fitToContainer();
+    renderTable();
+  }
+
+  if (mapImage.complete && mapImage.naturalWidth > 0) {
+    initialize();
+  } else {
+    mapImage.addEventListener('load', initialize, { once: true });
+  }
+
+  // Safety net: poll for image readiness in case the load event was missed
+  let pollAttempts = 0;
+  const pollId = setInterval(() => {
+    pollAttempts += 1;
+    if (mapImage.naturalWidth > 0 && pinList.children.length === 0) {
+      console.log('Polling triggered initialize at attempt', pollAttempts);
+      initialize();
+    }
+    if (pinList.children.length > 0 || pollAttempts > 20) {
+      clearInterval(pollId);
+    }
+  }, 250);
+
+  window.addEventListener('resize', () => {
     renderPins();
-  }
-
-  function renderPins() {
-    // Render map pins
-    pinList.innerHTML = '';
-    pins.forEach((pin, i) => {
-      const el = document.createElement('div');
-      el.className = 'saved-pin';
-      el.style.left = `${pin.x}%`;
-      el.style.top = `${pin.y}%`;
-      el.title = `Pin ${i + 1}: (${pin.x}, ${pin.y}) — Double-click to remove`;
-      el.innerHTML = `<span class="saved-pin__label">${i + 1}</span>`;
-      el.addEventListener('dblclick', (e) => {
-        e.stopPropagation();
-        removePin(i);
-      });
-      pinList.appendChild(el);
-    });
-
-    // Render table rows
-    pinsBody.innerHTML = '';
-    pins.forEach((pin, i) => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${i + 1}</td>
-        <td>${pin.x}</td>
-        <td>${pin.y}</td>
-        <td><button class="pin-remove-btn" data-index="${i}">✕ Remove</button></td>
-      `;
-      tr.querySelector('.pin-remove-btn')!.addEventListener('click', () => removePin(i));
-      pinsBody.appendChild(tr);
-    });
-  }
+  });
 </script>
