@@ -37,10 +37,7 @@ const { locations } = Astro.props;
         data-map-x={loc.mapX}
         data-map-y={loc.mapY}
       >
-        <svg class="map-hotspot__shield" viewBox="0 0 10 18" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <path d="M5 1 C7.5 3 8.5 6 8 9 C7.6 11 6.5 12.5 5.3 13.5 L5.3 17 L4.7 17 L4.7 13.5 C3.5 12.5 2.4 11 2 9 C1.5 6 2.5 3 5 1 Z" />
-          <path d="M5 3 L5 13" stroke="rgba(220, 200, 170, 0.5)" stroke-width="0.4" fill="none" />
-        </svg>
+        <img class="map-hotspot__shield" src="/images/location-icon.png" alt="" aria-hidden="true" draggable="false" />
         <span class="map-hotspot__label">{loc.name}</span>
       </a>
     ))}
@@ -95,8 +92,8 @@ const { locations } = Astro.props;
     text-decoration: none;
     z-index: 10;
     opacity: 0;
-    width: 10px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
     transition: opacity var(--transition-fast), transform var(--transition-fast);
   }
 
@@ -109,12 +106,11 @@ const { locations } = Astro.props;
     inset: 0;
     width: 100%;
     height: 100%;
-    fill: rgba(42, 37, 32, 0.82);
-    stroke: rgba(180, 160, 130, 0.45);
-    stroke-width: 0.4;
-    stroke-linejoin: round;
-    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35));
-    transition: fill var(--transition-fast), stroke var(--transition-fast);
+    object-fit: contain;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+    transition: filter var(--transition-fast);
+    user-select: none;
+    pointer-events: none;
   }
 
   .map-hotspot:hover {
@@ -123,8 +119,7 @@ const { locations } = Astro.props;
   }
 
   .map-hotspot:hover .map-hotspot__shield {
-    fill: rgba(60, 50, 40, 0.95);
-    stroke: rgba(220, 185, 130, 0.8);
+    filter: drop-shadow(0 0 6px rgba(220, 185, 130, 0.9));
   }
 
   .map-hotspot__label {
